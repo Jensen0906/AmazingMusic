@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name" translatable="false">AmazingMusic</string>
+    <string name="text_your_username">Text your username</string>
+    <string name="text_your_password">Text your password</string>
+    <string name="login">Login</string>
+    <string name="rentable">Rentable:</string>
+    <string name="price">price:</string>
+    <string name="username_or_password_empty">Username or Password input is Empty</string>
+    <string name="connect_server_failed">Failed to connect server</string>
+    <string name="noaccount_register">No Account? Register</string>
+    <string name="text_your_password_again">Text your password again</string>
+    <string name="register">Register</string>
+    <string name="password_digits" translatable="false">_.!@#$qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890</string>
+    <string name="twice_password_not_same">Twice Password not Same</string>
+    <string name="mine">Mine</string>
+    <string name="favorite">Favorite</string>
+    <string name="feedback">Feedback</string>
+    <string name="text_your_feedback">Text your feedback</string>
+    <string name="left_drawer_open">Left drawer bar open</string>
+    <string name="left_drawer_closed">Left drawer bar closed</string>
+    <string name="home">Home</string>
+    <string name="log_out">Log Out</string>
+    <string name="text_your_keyword">Text what you want</string>
+    <string name="play_all_songs">Play All</string>
+    <string name="no_favorite_song">There is no any song</string>
+    <string name="get_songs_error">Song not obtained, please check the net</string>
+    <string name="get_songs_empty">There are no more songs left</string>
+</resources>
