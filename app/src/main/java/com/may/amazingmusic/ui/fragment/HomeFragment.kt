@@ -136,6 +136,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             PlayerManager.page = 1
             songViewModel.getFavoriteIds()
             songViewModel.getSongs(1)
+
+            binding.songsRv.removeOnScrollListener(scrollListener)
+            binding.songsRv.addOnScrollListener(scrollListener)
         }
     }
 
