@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="player_card_view_color">#CDDAFF</color>
+    <color name="playlist_split_view_color">#ADBCE4</color>
+    <color name="button_text_color">#253550</color>
+    <color name="playlist_playing_song_text_color">#1FA7AD</color>
+</resources>
