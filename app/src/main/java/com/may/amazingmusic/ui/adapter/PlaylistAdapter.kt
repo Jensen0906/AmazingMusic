@@ -11,6 +11,8 @@ import com.may.amazingmusic.App.Companion.appContext
 import com.may.amazingmusic.R
 import com.may.amazingmusic.bean.Song
 import com.may.amazingmusic.databinding.ItemPlaylistBinding
+import com.may.amazingmusic.utils.orInvalid
+import com.may.amazingmusic.utils.orZero
 import com.may.amazingmusic.utils.player.PlayerManager
 
 /**
@@ -77,13 +79,14 @@ class PlaylistAdapter(private var playlist: List<Song>, private val clickListene
         this.playlist = PlayerManager.playlist.toList()
         notifyItemRemoved(position)
         notifyItemRangeChanged(position, playlist.size)
+        setCurrentSongIndex(PlayerManager.player?.currentMediaItemIndex.orInvalid())
     }
 
     fun setCurrentSongIndex(currentSongIndex: Int) {
         if (currentSongIndex < 0) return
+        Log.i(TAG, "setCurrentSongIndex: index=${currentSongIndex}, lastIndex=${this.currentSongIndex}, playlist.size=${playlist.size}")
         val lastIndex = this.currentSongIndex
         this.currentSongIndex = currentSongIndex
-        Log.i(TAG, "setCurrentSongIndex: index=${currentSongIndex}, playlist.size=${playlist.size}")
         notifyItemChanged(lastIndex)
         notifyItemChanged(currentSongIndex)
     }

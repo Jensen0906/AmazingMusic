@@ -11,3 +11,5 @@ fun Boolean?.isTrue(): Boolean = this ?: false
 fun Boolean?.isFalse(): Boolean = if (this == null) false else !this
 
 fun Int?.orZero(): Int = this ?: 0
+
+fun Int?.orInvalid(): Int = this ?: -1

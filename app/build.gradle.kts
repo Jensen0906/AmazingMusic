@@ -12,8 +12,8 @@ android {
         applicationId = "com.may.amazingmusic"
         minSdk = 24
         targetSdk = 34
-        versionCode = 7
-        versionName = "1.7.24.1115"
+        versionCode = 8
+        versionName = "1.8.24.1117"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

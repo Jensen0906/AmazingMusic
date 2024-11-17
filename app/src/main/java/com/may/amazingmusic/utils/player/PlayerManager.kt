@@ -21,6 +21,7 @@ import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SHUFFLE
 import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SINGLE
 import com.may.amazingmusic.constant.NetWorkConst.FUN_VIDEO_URL
 import com.may.amazingmusic.utils.isTrue
+import com.may.amazingmusic.utils.orInvalid
 import com.may.amazingmusic.utils.orZero
 import okhttp3.OkHttpClient
 import java.io.File
@@ -59,7 +60,7 @@ object PlayerManager {
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 playingSongUrl = player?.currentMediaItem?.localConfiguration?.uri?.toString()
                 if (player?.currentMediaItem != funVideoMediaItem) {
-                    curSongIndexLiveData.postValue(player?.currentMediaItemIndex ?: -1)
+                    curSongIndexLiveData.postValue(player?.currentMediaItemIndex.orInvalid())
                 }
                 super.onMediaItemTransition(mediaItem, reason)
             }
@@ -81,7 +82,6 @@ object PlayerManager {
     fun playSongByPosition(position: Int) {
         val currentIndex = player?.currentMediaItemIndex
         if (currentIndex != position) {
-            curSongIndexLiveData.postValue(currentIndex ?: -1)
             player?.seekTo(position, 0)
         }
         player?.play()
@@ -137,18 +137,8 @@ object PlayerManager {
     }
 
     fun removeMediaItem(position: Int) {
-        val index = player?.currentMediaItemIndex
         val count = playlist.size
         if (position >= count) return
-        if (position == index) {
-            if (count > 1) {// 不止一首歌
-                if (count == position + 1) { // 不止一首歌，且正在播放(并且remove)最后一首, 则播放列表第一首歌
-                    playSongByPosition(0)
-                } else { // 不止一首歌，且播放(remove)的不是最后一首，直接播放下一首歌
-                    playSongByPosition(position + 1)
-                }
-            }
-        }
         player?.removeMediaItem(position)
         playlist.removeAt(position)
     }

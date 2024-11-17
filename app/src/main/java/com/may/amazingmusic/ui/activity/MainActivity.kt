@@ -50,6 +50,7 @@ import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseActivity
 import com.may.amazingmusic.utils.isTrue
+import com.may.amazingmusic.utils.orInvalid
 import com.may.amazingmusic.utils.orZero
 import com.may.amazingmusic.utils.player.PlayerListener
 import com.may.amazingmusic.utils.player.PlayerManager
@@ -155,7 +156,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         playlistAdapter = PlaylistAdapter(PlayerManager.playlist, object : PlaylistItemClickListener {
             override fun itemClickListener(position: Int) {
                 PlayerManager.playSongByPosition(position)
-                playlistAdapter?.setCurrentSongIndex(position)
             }
 
             override fun itemRemoveListener(position: Int) {
@@ -197,6 +197,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         PlayerManager.curSongIndexLiveData.observe(this) {
             playlistAdapter?.setCurrentSongIndex(it)
+            playlistBinding.playlistRv.scrollToPosition(it)
         }
 
         PlayerManager.repeatModeLiveData.observe(this) {
@@ -366,8 +367,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 dialog.setOnDismissListener {
                     isAnimating = true
                     dialog.window?.decorView?.postDelayed({ isAnimating = false }, 500)
-                    binding.fgView.isEnabled = true
-                    binding.playlistIv.isEnabled = true
                     songViewModel.dialogShowing = false
                 }
             }
@@ -387,12 +386,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }
         }
         Log.d(TAG, "displayPlaylist: currentSongIndex=${PlayerManager.curSongIndexLiveData.value}")
-        playlistAdapter?.setCurrentSongIndex(PlayerManager.curSongIndexLiveData.value ?: -1)
         playlistBinding.clearListLayout.visibility = if (PlayerManager.playlist.isEmpty()) View.GONE else View.VISIBLE
         playlistBinding.playModeLayout.visibility = playlistBinding.clearListLayout.visibility
+        playlistAdapter?.setCurrentSongIndex(PlayerManager.curSongIndexLiveData.value.orInvalid())
+        playlistBinding.playlistRv.scrollToPosition(PlayerManager.curSongIndexLiveData.value.orZero())
         playlistDialog?.show()
-        binding.playlistIv.isEnabled = false
-        binding.fgView.isEnabled = false
     }
 
     private fun justPlayFirstSong(song: Song) {
