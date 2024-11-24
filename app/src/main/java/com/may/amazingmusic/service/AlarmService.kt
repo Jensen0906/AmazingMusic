@@ -21,13 +21,12 @@ class AlarmService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? {
         val timeInMinutes = intent?.getIntExtra(ALARM_TIME_MINUTE, 5)
-        Log.e(TAG, "onBind: time=$timeInMinutes min")
+        Log.i(TAG, "onBind: time=$timeInMinutes min")
         setOrCancelTimer(timeInMinutes)
         return null
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
-        Log.e(TAG, "onUnbind: ")
         setOrCancelTimer(0, isCancel = true)
         return super.onUnbind(intent)
     }

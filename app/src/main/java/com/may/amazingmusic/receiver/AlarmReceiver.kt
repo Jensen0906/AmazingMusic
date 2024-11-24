@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 class AlarmReceiver : BroadcastReceiver() {
     private val TAG = this.javaClass.simpleName
     override fun onReceive(context: Context?, intent: Intent?) {
-        Log.e(TAG, "onReceive: context=$context, intent=$intent, action=${intent?.action}")
+        Log.i(TAG, "onReceive: context=$context, intent=$intent, action=${intent?.action}")
         if (intent?.action == ALARM_TIME_ACTION) {
             CoroutineScope(Dispatchers.Main).launch {
                 if (DataStoreManager.stopUntilPlayCompleted.first().isTrue()) {

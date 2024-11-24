@@ -87,7 +87,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         lifecycleScope.launch {
             DataStoreManager.timerOpenedFlow.collect {
-                Log.e(TAG, "initPreferences: timerOpened=$it")
                 timerSwitch?.isChecked = it.isTrue()
             }
         }

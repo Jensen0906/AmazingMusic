@@ -194,7 +194,6 @@ object PlayerManager {
     }
 
     fun release() {
-        Log.e(TAG, "release: ")
         clearPlaylist()
         player?.release()
         player = null
