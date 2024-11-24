@@ -1,5 +1,6 @@
 package com.may.amazingmusic.utils
 
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -16,6 +17,9 @@ object DataStoreManager {
     private val USER_STATUS_KEY = intPreferencesKey("user_status")
 
     private val PLAYER_REPEAT_MODE = intPreferencesKey("repeat_mode")
+
+    private val TIMER_OPENED = booleanPreferencesKey("timer_opened")
+    private val STOP_UNTIL_THIS_SONG_FINISH = booleanPreferencesKey("stop_until_this_song_finish")
 
     suspend fun saveUserInfo(user: User) {
         saveUserID(user.uid)
@@ -44,6 +48,14 @@ object DataStoreManager {
         appContext.userDataStore.edit { it[PLAYER_REPEAT_MODE] = repeatMode }
     }
 
+    suspend fun updateTimerOpened(isOpen: Boolean) {
+        appContext.userDataStore.edit { it[TIMER_OPENED] = isOpen }
+    }
+
+    suspend fun updateStopUntilPlayCompleted(wait: Boolean) {
+        appContext.userDataStore.edit { it[STOP_UNTIL_THIS_SONG_FINISH] = wait }
+    }
+
     suspend fun deleteUserID() {
         appContext.userDataStore.edit { it.remove(USER_UID_KEY) }
     }
@@ -57,4 +69,8 @@ object DataStoreManager {
     val userStatusFlow: Flow<Int?> = appContext.userDataStore.data.map { it[USER_STATUS_KEY] }
 
     val repeatModeFlow: Flow<Int?> = appContext.userDataStore.data.map { it[PLAYER_REPEAT_MODE] }
+
+    val timerOpenedFlow: Flow<Boolean?> = appContext.userDataStore.data.map { it[TIMER_OPENED] }
+
+    val stopUntilPlayCompleted: Flow<Boolean?> = appContext.userDataStore.data.map { it[STOP_UNTIL_THIS_SONG_FINISH] }
 }

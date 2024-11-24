@@ -20,9 +20,13 @@ import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_LOOP
 import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SHUFFLE
 import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SINGLE
 import com.may.amazingmusic.constant.NetWorkConst.FUN_VIDEO_URL
+import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.orInvalid
 import com.may.amazingmusic.utils.orZero
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import java.io.File
 
@@ -44,6 +48,7 @@ object PlayerManager {
     val repeatModeLiveData = MutableLiveData(ExoPlayer.REPEAT_MODE_OFF)
 
     val playlist: MutableList<Song> = mutableListOf()
+    var stopUntilThisOver = false
 
     fun setPlayerListener() {
         player?.addListener(object : Player.Listener {
@@ -58,9 +63,21 @@ object PlayerManager {
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                playingSongUrl = player?.currentMediaItem?.localConfiguration?.uri?.toString()
-                if (player?.currentMediaItem != funVideoMediaItem) {
-                    curSongIndexLiveData.postValue(player?.currentMediaItemIndex.orInvalid())
+                player?.playWhenReady = false
+                player?.pause()
+                if (stopUntilThisOver) {
+                    release()
+                    stopUntilThisOver = false
+                    CoroutineScope(Dispatchers.Main).launch {
+                        DataStoreManager.updateTimerOpened(false)
+                    }
+                } else {
+                    player?.play()
+                    player?.playWhenReady = true
+                    playingSongUrl = player?.currentMediaItem?.localConfiguration?.uri?.toString()
+                    if (player?.currentMediaItem != funVideoMediaItem) {
+                        curSongIndexLiveData.postValue(player?.currentMediaItemIndex.orInvalid())
+                    }
                 }
                 super.onMediaItemTransition(mediaItem, reason)
             }
@@ -177,6 +194,7 @@ object PlayerManager {
     }
 
     fun release() {
+        Log.e(TAG, "release: ")
         clearPlaylist()
         player?.release()
         player = null

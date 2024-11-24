@@ -24,4 +24,14 @@
     <string name="no_favorite_song">没有可播放的歌曲</string>
     <string name="get_songs_error">未获取到歌曲，请检查网络</string>
     <string name="get_songs_empty">没有更多歌曲了</string>
+    <string name="settings">设置</string>
+    <string name="feedback_header">反馈</string>
+    <string name="timer_header">定时关闭</string>
+    <string name="feedback_title">输入你想听的歌</string>
+    <string name="submit">提交</string>
+    <string name="timer_title">定时关闭播放</string>
+    <string name="timer_summary_on">音乐将在%1$s分钟后关闭</string>
+    <string name="timer_summary_off">开启定时关闭功能</string>
+    <string name="time_select_title">设置定时关闭时间</string>
+    <string name="stop_until_this_song_finish_title">整首歌播放完后关闭</string>
 </resources>

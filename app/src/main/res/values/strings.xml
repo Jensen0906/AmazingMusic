@@ -14,6 +14,7 @@
     <string name="twice_password_not_same">Twice Password not Same</string>
     <string name="mine">Mine</string>
     <string name="favorite">Favorite</string>
+    <string name="settings">Settings</string>
     <string name="feedback">Feedback</string>
     <string name="text_your_feedback">Text your feedback</string>
     <string name="left_drawer_open">Left drawer bar open</string>
@@ -25,4 +26,18 @@
     <string name="no_favorite_song">There is no any song</string>
     <string name="get_songs_error">Song not obtained, please check the net</string>
     <string name="get_songs_empty">There are no more songs left</string>
+    <!-- Preference Titles -->
+    <string name="feedback_header">Feedback</string>
+    <string name="timer_header">Timed Stop</string>
+
+    <!-- Feedback Preferences -->
+    <string name="feedback_title">Text what you want</string>
+    <string name="submit">submit</string>
+
+    <!-- Timer Preferences -->
+    <string name="timer_title">Set Timer To Stop Playing</string>
+    <string name="timer_summary_on">It will stop playing in %1$s minutes</string>
+    <string name="timer_summary_off">Enable timed shutdown function</string>
+    <string name="time_select_title">Timed Stop Time</string>
+    <string name="stop_until_this_song_finish_title">Stop after song playing completed</string>
 </resources>

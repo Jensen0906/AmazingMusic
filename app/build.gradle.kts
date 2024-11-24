@@ -12,8 +12,8 @@ android {
         applicationId = "com.may.amazingmusic"
         minSdk = 24
         targetSdk = 34
-        versionCode = 8
-        versionName = "1.8.24.1117"
+        versionCode = 9
+        versionName = "1.9.24.1125"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.androidx.preference)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

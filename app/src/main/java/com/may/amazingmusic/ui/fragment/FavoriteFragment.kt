@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.may.amazingmusic.bean.Song
@@ -15,10 +14,8 @@ import com.may.amazingmusic.databinding.FragmentFavoriteBinding
 import com.may.amazingmusic.ui.activity.MainActivity
 import com.may.amazingmusic.ui.adapter.SongsAdapter
 import com.may.amazingmusic.ui.adapter.SongsItemClickListener
-import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.base.BaseFragment
 import com.may.amazingmusic.viewmodel.SongViewModel
-import kotlinx.coroutines.launch
 
 /**
  *

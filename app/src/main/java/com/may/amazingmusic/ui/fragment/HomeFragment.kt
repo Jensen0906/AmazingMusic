@@ -19,6 +19,7 @@ import com.may.amazingmusic.databinding.FragmentHomeBinding
 import com.may.amazingmusic.ui.activity.MainActivity
 import com.may.amazingmusic.ui.adapter.SongsAdapter
 import com.may.amazingmusic.ui.adapter.SongsItemClickListener
+import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseFragment
 import com.may.amazingmusic.utils.orZero
@@ -125,6 +126,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             songViewModel.getFavoriteIds()
             songViewModel.getSongs(PlayerManager.page)
             binding.loading.visibility = View.VISIBLE
+            lifecycleScope.launch {
+                DataStoreManager.updateTimerOpened(false)
+            }
         }
     }
 

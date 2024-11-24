@@ -46,6 +46,7 @@ import com.may.amazingmusic.ui.fragment.HomeFragment
 import com.may.amazingmusic.ui.fragment.MineFragment
 import com.may.amazingmusic.ui.fragment.PlayFragment
 import com.may.amazingmusic.ui.fragment.SearchFragment
+import com.may.amazingmusic.ui.fragment.SettingsFragment
 import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseActivity
@@ -70,7 +71,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private val mineFragment = MineFragment()
     private val homeFragment = HomeFragment()
     private val favoriteFragment = FavoriteFragment()
-    private val feedbackFragment = FeedbackFragment()
+    private val settingsFragment = SettingsFragment()
     private val playFragment = PlayFragment()
     private val searchFragment = SearchFragment()
     private var currentFragment: Fragment = homeFragment
@@ -196,8 +197,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
 
         PlayerManager.curSongIndexLiveData.observe(this) {
-            playlistAdapter?.setCurrentSongIndex(it)
-            playlistBinding.playlistRv.scrollToPosition(it)
+            if (it < 0) {
+                playlistAdapter?.setSongToPlaylist()
+                playlistDialog?.dismiss()
+            } else {
+                playlistAdapter?.setCurrentSongIndex(it)
+                playlistBinding.playlistRv.scrollToPosition(it)
+            }
         }
 
         PlayerManager.repeatModeLiveData.observe(this) {
@@ -247,8 +253,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     switchFragment(favoriteFragment)
                 }
 
-                R.id.menu_feedback -> {
-                    switchFragment(feedbackFragment)
+                R.id.menu_settings -> {
+                    switchFragment(settingsFragment)
                 }
 
                 else -> {}

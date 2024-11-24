@@ -1,0 +1,39 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/feedback_header">
+
+        <EditTextPreference
+            app:key="feedback_ed"
+            app:title="@string/feedback_title"
+            app:useSimpleSummaryProvider="true" />
+
+        <Preference
+            app:key="feedback_pf"
+            app:title="@string/submit" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/timer_header">
+
+        <SwitchPreference
+            app:key="timer_switch"
+            app:summaryOff="@string/timer_summary_off"
+            app:summaryOn="@string/timer_summary_on"
+            app:title="@string/timer_title" />
+
+        <ListPreference
+            app:defaultValue="5"
+            app:dependency="timer_switch"
+            app:entries="@array/timer_entries"
+            app:entryValues="@array/timer_values"
+            app:key="time_list"
+            app:title="@string/time_select_title"
+            app:useSimpleSummaryProvider="true" />
+
+        <SwitchPreference
+            app:dependency="timer_switch"
+            app:key="until_play_completed"
+            app:title="@string/stop_until_this_song_finish_title" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
