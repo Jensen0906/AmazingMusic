@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlin.system.exitProcess
 
 /**
  * @Author Jensen
@@ -26,8 +27,8 @@ class AlarmReceiver : BroadcastReceiver() {
                 if (DataStoreManager.stopUntilPlayCompleted.first().isTrue()) {
                     PlayerManager.stopUntilThisOver = true
                 } else {
-                    PlayerManager.release()
                     DataStoreManager.updateTimerOpened(false)
+                    exitProcess(0)
                 }
             }
         }

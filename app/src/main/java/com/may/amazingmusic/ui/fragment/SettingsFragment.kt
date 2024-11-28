@@ -90,8 +90,18 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 timerSwitch?.isChecked = it.isTrue()
             }
         }
+        PlayerManager.disableTimer.observe(requireActivity()) {
+            if (PlayerManager.playlist.isEmpty() && it.isFalse()) {
+                lifecycleScope.launch {
+                    DataStoreManager.updateTimerOpened(false)
+                }
+                timerSwitch?.isChecked = false
+                timerSwitch?.isEnabled = false
+            }
+        }
         timerSwitch?.summaryOn = getString(R.string.timer_summary_on, timeList?.value)
-        timerSwitch?.isEnabled = PlayerManager.player != null
+        timerSwitch?.isChecked = PlayerManager.playlist.isNotEmpty()
+        timerSwitch?.isEnabled = PlayerManager.playlist.isNotEmpty()
     }
 
     private fun setFeedbackCategory() {
@@ -113,6 +123,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private fun setTimerCategory() {
         timerSwitch?.setOnPreferenceChangeListener { _, newValue ->
+            if (PlayerManager.playlist.isEmpty()) return@setOnPreferenceChangeListener true
             val isOpen = newValue as Boolean
             lifecycleScope.launch {
                 DataStoreManager.updateTimerOpened(isOpen)

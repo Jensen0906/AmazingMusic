@@ -50,6 +50,7 @@ import com.may.amazingmusic.ui.fragment.SettingsFragment
 import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseActivity
+import com.may.amazingmusic.utils.isFalse
 import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.orInvalid
 import com.may.amazingmusic.utils.orZero
@@ -166,6 +167,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     playlistBinding.clearListLayout.visibility = View.GONE
                     playlistBinding.playModeLayout.visibility = View.GONE
                     playlistDialog?.dismiss()
+                    PlayerManager.disableTimer.postValue(false)
                 }
                 playlistAdapter?.removeSongFromList(position)
             }
@@ -379,8 +381,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             playlistBinding.clearListLayout.setOnClickListener {
                 if (isAnimating) return@setOnClickListener
                 PlayerManager.clearPlaylist()
-                playlistAdapter?.setSongToPlaylist()
-                playlistDialog?.dismiss()
             }
             playlistBinding.playModeLayout.setOnClickListener {
                 if (isAnimating) return@setOnClickListener
@@ -399,17 +399,22 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         playlistDialog?.show()
     }
 
+    private var isPlayServiceBinding = false
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            isPlayServiceBinding = true
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            isPlayServiceBinding = false
+        }
+    }
     private fun justPlayFirstSong(song: Song) {
         Log.d(TAG, "justPlayFirstSong: song=${song.title}")
         PlayerManager.clearPlaylist()
         val intent = Intent(this, PlayService::class.java)
-        bindService(intent, object : ServiceConnection {
-            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            }
 
-            override fun onServiceDisconnected(name: ComponentName?) {
-            }
-        }, Context.BIND_AUTO_CREATE)
+        if (isPlayServiceBinding.isTrue() && PlayerManager.player == null) unbindService(serviceConnection)
 
         if (PlayerManager.player == null) {
             val dataSourceFactory = PlayerManager.buildCacheDataSourceFactory(this)
@@ -419,6 +424,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             PlayerManager.setPlayerListener()
             PlayerManager.addAnalyticsListenerForTest()
         }
+
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+
         PlayerManager.player?.let { player ->
             if (player.isPlaying) {
                 player.clearMediaItems()

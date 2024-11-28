@@ -29,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import java.io.File
+import kotlin.system.exitProcess
 
 /**
  *
@@ -49,6 +50,7 @@ object PlayerManager {
 
     val playlist: MutableList<Song> = mutableListOf()
     var stopUntilThisOver = false
+    val disableTimer = MutableLiveData(false)
 
     fun setPlayerListener() {
         player?.addListener(object : Player.Listener {
@@ -68,9 +70,7 @@ object PlayerManager {
                 if (stopUntilThisOver) {
                     release()
                     stopUntilThisOver = false
-                    CoroutineScope(Dispatchers.Main).launch {
-                        DataStoreManager.updateTimerOpened(false)
-                    }
+                    exitProcess(0)
                 } else {
                     player?.play()
                     player?.playWhenReady = true
@@ -164,6 +164,7 @@ object PlayerManager {
         player?.clearMediaItems()
         playlist.clear()
         curSongIndexLiveData.postValue(-1)
+        disableTimer.postValue(false)
     }
 
     private var simpleCache: SimpleCache? = null
