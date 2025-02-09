@@ -41,7 +41,6 @@ import com.may.amazingmusic.service.PlayService
 import com.may.amazingmusic.ui.adapter.PlaylistAdapter
 import com.may.amazingmusic.ui.adapter.PlaylistItemClickListener
 import com.may.amazingmusic.ui.fragment.FavoriteFragment
-import com.may.amazingmusic.ui.fragment.FeedbackFragment
 import com.may.amazingmusic.ui.fragment.HomeFragment
 import com.may.amazingmusic.ui.fragment.MineFragment
 import com.may.amazingmusic.ui.fragment.PlayFragment
@@ -50,7 +49,6 @@ import com.may.amazingmusic.ui.fragment.SettingsFragment
 import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseActivity
-import com.may.amazingmusic.utils.isFalse
 import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.orInvalid
 import com.may.amazingmusic.utils.orZero
@@ -176,7 +174,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         playlistBinding.playlistRv.adapter = playlistAdapter
         playlistBinding.playlistRv.layoutManager = LinearLayoutManager(this)
 
-        binding.playIv.setImageResource(if (PlayerManager.player?.isPlaying.isTrue()) R.drawable.icon_pause_20 else R.drawable.icon_play_20)
+        binding.playIv.setImageResource(if (PlayerManager.player?.isPlaying.isTrue()) R.drawable.icon_pause else R.drawable.icon_play)
     }
 
     private fun initDataAndObserver() {
@@ -320,7 +318,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             override fun onIsPlayingChanged(isPlaying: Boolean, title: String?) {
                 if (isPlaying.isTrue()) ToastyUtils.success("正在播放 - $title")
                 binding.playIv.setImageResource(
-                    if (isPlaying) R.drawable.icon_pause_20 else R.drawable.icon_play_20
+                    if (isPlaying) R.drawable.icon_pause else R.drawable.icon_play
                 )
             }
         }
@@ -521,7 +519,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         currentFragment = fragment
 
         binding.displayPlayerIv.setImageResource(
-            if (currentFragment == playFragment) R.drawable.icon_arrow_down_20 else R.drawable.icon_arrow_up_20
+            if (currentFragment == playFragment) R.drawable.icon_arrow_down else R.drawable.icon_arrow_up
         )
         binding.searchIv.visibility =
             if (currentFragment == homeFragment || currentFragment == searchFragment) View.VISIBLE else View.GONE
