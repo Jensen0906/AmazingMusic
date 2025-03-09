@@ -48,6 +48,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private var timerSwitch: SwitchPreference? = null
     private var timeList: ListPreference? = null
     private var untilPlayCompleted: SwitchPreference? = null
+    private var sourceSelect: ListPreference? = null
 
     private var btnClickTime = 0L
 
@@ -59,6 +60,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         setFeedbackCategory()
         setTimerCategory()
+        setSourceCategory()
 
         lifecycleScope.launch {
             feedbackViewModel.addFeedbackResult.collect {
@@ -84,6 +86,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
         timerSwitch = findPreference("timer_switch")
         timeList = findPreference("time_list")
         untilPlayCompleted = findPreference("until_play_completed")
+
+        sourceSelect = findPreference("source_list")
 
         lifecycleScope.launch {
             DataStoreManager.timerOpenedFlow.collect {
@@ -145,6 +149,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
             cancelTimer()
             startTimer((newValue as String).toInt())
+            true
+        }
+    }
+
+    private fun setSourceCategory() {
+        sourceSelect?.setOnPreferenceChangeListener { _, newValue ->
+            lifecycleScope.launch {
+                DataStoreManager.updateKuwoSourceSelected((newValue as String) == "kuwo")
+            }
             true
         }
     }

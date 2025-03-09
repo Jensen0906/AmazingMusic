@@ -12,4 +12,6 @@ fun Boolean?.isFalse(): Boolean = if (this == null) false else !this
 
 fun Int?.orZero(): Int = this ?: 0
 
+fun Int?.moreThanOne(): Boolean = if (this == null) false else this > 1
+
 fun Int?.orInvalid(): Int = this ?: -1

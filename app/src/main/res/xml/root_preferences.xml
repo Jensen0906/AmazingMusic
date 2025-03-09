@@ -36,4 +36,17 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory app:title="@string/source_header">
+
+        <ListPreference
+            app:defaultValue="self"
+            app:entries="@array/source_entries"
+            app:entryValues="@array/source_values"
+            app:key="source_list"
+            app:title="@string/source_select_title"
+            app:summary="@string/source_select_summary"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
 </PreferenceScreen>

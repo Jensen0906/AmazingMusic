@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
@@ -22,6 +23,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -54,6 +56,7 @@ import com.may.amazingmusic.utils.orInvalid
 import com.may.amazingmusic.utils.orZero
 import com.may.amazingmusic.utils.player.PlayerListener
 import com.may.amazingmusic.utils.player.PlayerManager
+import com.may.amazingmusic.viewmodel.KuwoViewModel
 import com.may.amazingmusic.viewmodel.SongViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -77,6 +80,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private var lastFragment: Fragment = homeFragment
 
     private lateinit var songViewModel: SongViewModel
+    private lateinit var kuwoViewModel: KuwoViewModel
 
     private var hasOpenPlayer = false
 
@@ -86,16 +90,20 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         Log.i(TAG, "onCreate: action=${intent.action}")
 
         songViewModel = ViewModelProvider(this)[SongViewModel::class.java]
+        kuwoViewModel = ViewModelProvider(this)[KuwoViewModel::class.java]
 
-        initViewAndAdapter()
-
-        setSupportActionBar(binding.toolbar)
-
-        onClick()
         supportFragmentManager.beginTransaction()
             .replace(R.id.fg_view, homeFragment)
             .commit()
+        setSupportActionBar(binding.toolbar)
 
+        kuwoViewModel.isKuwoSource()
+        kuwoViewModel.isKuwoSource.observe(this) {
+            PlayerManager.isKuwoSource = it
+        }
+
+        initViewAndAdapter()
+        onClick()
         initDataAndObserver()
     }
 
@@ -204,6 +212,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 playlistAdapter?.setCurrentSongIndex(it)
                 playlistBinding.playlistRv.scrollToPosition(it)
             }
+
+            if (it >= 0) {
+                PlayerManager.coverUrl = PlayerManager.playlist[it].coverUrl ?: ""
+                songViewModel.songCoverUrl.postValue(PlayerManager.coverUrl)
+            }
+            playService?.updateSongInfo()
         }
 
         PlayerManager.repeatModeLiveData.observe(this) {
@@ -398,13 +412,16 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
 
     private var isPlayServiceBinding = false
+    private var playService: PlayService? = null
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             isPlayServiceBinding = true
+            playService = (service as PlayService.MyBinder).getService()
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             isPlayServiceBinding = false
+            playService = null
         }
     }
     private fun justPlayFirstSong(song: Song) {
@@ -415,10 +432,15 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         if (isPlayServiceBinding.isTrue() && PlayerManager.player == null) unbindService(serviceConnection)
 
         if (PlayerManager.player == null) {
-            val dataSourceFactory = PlayerManager.buildCacheDataSourceFactory(this)
-            PlayerManager.player = ExoPlayer.Builder(this)
-                .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
-                .build()
+            if (PlayerManager.isKuwoSource) {
+                PlayerManager.player = ExoPlayer.Builder(this).build()
+            } else {
+                val dataSourceFactory = PlayerManager.buildCacheDataSourceFactory(this)
+                PlayerManager.player = ExoPlayer.Builder(this)
+                    .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+                    .build()
+            }
+
             PlayerManager.setPlayerListener()
             PlayerManager.addAnalyticsListenerForTest()
         }
@@ -430,7 +452,18 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 player.clearMediaItems()
                 PlayerManager.playlist.clear()
             }
-            song.url?.let { MediaItem.fromUri(it) }?.let {
+            song.url?.let {
+                if (PlayerManager.isKuwoSource) {
+                    MediaItem.Builder()
+                        .setUri(it)
+                        .setMediaMetadata(MediaMetadata.Builder()
+                            .setTitle(song.title).setArtist(song.singer)
+                            .setArtworkUri(Uri.parse(song.coverUrl))
+                            .build()
+                        )
+                        .build()
+                } else MediaItem.fromUri(it)
+            }?.let {
                 player.setMediaItem(it)
                 PlayerManager.playlist.add(song)
             }

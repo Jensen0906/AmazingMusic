@@ -27,6 +27,15 @@
             app:show_vr_button="false"
             app:show_buffering="when_playing" />
 
+        <ImageView
+            android:id="@+id/song_cover"
+            android:layout_width="match_parent"
+            android:layout_height="500dp"
+            app:layout_constraintBottom_toBottomOf="@+id/player_view"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/player_view"
+            app:layout_constraintTop_toTopOf="@+id/player_view" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>

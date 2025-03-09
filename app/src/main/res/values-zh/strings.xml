@@ -34,4 +34,8 @@
     <string name="timer_summary_off">开启定时关闭功能</string>
     <string name="time_select_title">设置定时关闭时间</string>
     <string name="stop_until_this_song_finish_title">整首歌播放完后关闭</string>
+    <string name="source_header">音源</string>
+    <string name="source_select_title">选择一个音源</string>
+    <string name="source_select_summary">推荐使用酷我</string>
+    <string name="kuwo_selected_tips">酷我音源状态，主页暂无内容\n使用搜索功能</string>
 </resources>

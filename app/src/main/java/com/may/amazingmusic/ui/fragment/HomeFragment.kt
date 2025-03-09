@@ -22,8 +22,10 @@ import com.may.amazingmusic.ui.adapter.SongsItemClickListener
 import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseFragment
+import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.orZero
 import com.may.amazingmusic.utils.player.PlayerManager
+import com.may.amazingmusic.viewmodel.KuwoViewModel
 import com.may.amazingmusic.viewmodel.SongViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -39,6 +41,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
     private val TAG = this.javaClass.simpleName
 
     private lateinit var songViewModel: SongViewModel
+    private lateinit var kuwoViewModel: KuwoViewModel
     private lateinit var adapter: SongsAdapter
     private val songs = mutableListOf<Song>()
     private val songsMap = mutableMapOf<Long, Int>()
@@ -59,7 +62,19 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         songViewModel = ViewModelProvider(requireActivity())[SongViewModel::class.java]
+        kuwoViewModel = ViewModelProvider(requireActivity())[KuwoViewModel::class.java]
         super.onCreate(savedInstanceState)
+
+        lifecycleScope.launch {
+            if (DataStoreManager.isKuwoSelected.first().isTrue()) {
+                binding.loading.visibility = View.INVISIBLE
+                binding.songsRv.visibility = View.INVISIBLE
+                binding.kuwoTips.visibility = View.VISIBLE
+            } else {
+                binding.kuwoTips.visibility = View.INVISIBLE
+                binding.songsRv.visibility = View.VISIBLE
+            }
+        }
         initData(savedInstanceState)
         initClick()
         collectAndObserver()
@@ -134,22 +149,36 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
 
     private fun initClick() {
         binding.refreshLayout.setOnRefreshListener {
+            refreshView()
+        }
+    }
+
+    private fun refreshView() {
+        if (PlayerManager.isKuwoSource) {
+            binding.loading.visibility = View.INVISIBLE
+            binding.kuwoTips.visibility = View.VISIBLE
+            binding.songsRv.visibility = View.INVISIBLE
+            binding.refreshLayout.isRefreshing = false
+        } else {
+            binding.songsRv.visibility = View.VISIBLE
+            binding.kuwoTips.visibility = View.INVISIBLE
             songs.clear()
             setSongsHashMap(songs)
             adapter.updateSongs(emptyList())
             PlayerManager.page = 1
-            songViewModel.getFavoriteIds()
-            songViewModel.getSongs(1)
 
             binding.songsRv.removeOnScrollListener(scrollListener)
             binding.songsRv.addOnScrollListener(scrollListener)
+
+            songViewModel.getFavoriteIds()
+            songViewModel.getSongs(1)
         }
     }
 
     private fun collectAndObserver() {
         lifecycleScope.launch {
             songViewModel.songs.collect {
-                binding.loading.visibility = View.GONE
+                binding.loading.visibility = View.INVISIBLE
                 binding.refreshLayout.isRefreshing = false
                 if (it == null) {
                     ToastyUtils.error(getString(R.string.get_songs_error))

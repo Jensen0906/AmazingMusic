@@ -21,6 +21,8 @@ object DataStoreManager {
     private val TIMER_OPENED = booleanPreferencesKey("timer_opened")
     private val STOP_UNTIL_THIS_SONG_FINISH = booleanPreferencesKey("stop_until_this_song_finish")
 
+    private val KUWO_SOURCE_SELECTED = booleanPreferencesKey("kuwo_source_selected")
+
     suspend fun saveUserInfo(user: User) {
         saveUserID(user.uid)
         user.username?.let { saveUsername(it) }
@@ -60,6 +62,10 @@ object DataStoreManager {
         appContext.userDataStore.edit { it.remove(USER_UID_KEY) }
     }
 
+    suspend fun updateKuwoSourceSelected(isSelected: Boolean) {
+        appContext.userDataStore.edit { it[KUWO_SOURCE_SELECTED] = isSelected }
+    }
+
     val userIDFlow: Flow<Int?> = appContext.userDataStore.data.map { it[USER_UID_KEY] }
 
     val userUsernameFlow: Flow<String?> = appContext.userDataStore.data.map { it[USER_USERNAME_KEY] }
@@ -73,4 +79,6 @@ object DataStoreManager {
     val timerOpenedFlow: Flow<Boolean?> = appContext.userDataStore.data.map { it[TIMER_OPENED] }
 
     val stopUntilPlayCompleted: Flow<Boolean?> = appContext.userDataStore.data.map { it[STOP_UNTIL_THIS_SONG_FINISH] }
+
+    val isKuwoSelected: Flow<Boolean?> = appContext.userDataStore.data.map { it[KUWO_SOURCE_SELECTED] }
 }

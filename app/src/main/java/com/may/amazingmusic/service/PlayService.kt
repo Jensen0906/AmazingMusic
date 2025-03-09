@@ -11,8 +11,10 @@ import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.VectorDrawable
 import android.media.AudioManager
+import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -24,6 +26,9 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.PlayerNotificationManager
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.may.amazingmusic.App.Companion.appContext
 import com.may.amazingmusic.R
 import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SHUFFLE
@@ -31,7 +36,13 @@ import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SINGLE
 import com.may.amazingmusic.constant.IntentConst.PENDING_INTENT_ACTION
 import com.may.amazingmusic.receiver.HeadphoneReceiver
 import com.may.amazingmusic.ui.activity.MainActivity
+import com.may.amazingmusic.utils.DataStoreManager
+import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.player.PlayerManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 
 /**
@@ -50,10 +61,11 @@ class PlayService : Service() {
     private val notificationId = 1
     private val headphoneReceiver = HeadphoneReceiver()
     private lateinit var mediaSession: MediaSession
+    private val binder = MyBinder()
 
-    private val bitmap = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888)
+    private var bitmap = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888)
 
-    override fun onBind(intent: Intent?): IBinder? {
+    override fun onBind(intent: Intent?): IBinder {
         Log.d(TAG, "onBind: ")
         player = PlayerManager.player ?: ExoPlayer.Builder(this).build().apply {
             Log.e(TAG, "onBind: player is null, create it")
@@ -91,13 +103,13 @@ class PlayService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        getBitmap()
+        updateSongInfo()
 
         setPlayerNotification()
         startForeground(notificationId, NotificationCompat.Builder(this, channelId).build())
 
         registerHeadphone()
-        return null
+        return binder
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
@@ -109,6 +121,19 @@ class PlayService : Service() {
         unRegisterHeadphone()
         mediaSession.release()
         return super.onUnbind(intent)
+    }
+
+    fun updateSongInfo() {
+        tryGetBitmap {
+            if (it == null) {
+                val drawable = ContextCompat.getDrawable(appContext, R.drawable.music_background) as? VectorDrawable
+                val canvas = Canvas(bitmap)
+                drawable?.setBounds(0, 0, canvas.width, canvas.height)
+                drawable?.draw(canvas)
+            } else {
+                bitmap = it
+            }
+        }
     }
 
     private fun registerHeadphone() {
@@ -161,10 +186,24 @@ class PlayService : Service() {
         }
     }
 
-    private fun getBitmap() {
-        val drawable = ContextCompat.getDrawable(appContext, R.drawable.music_background) as? VectorDrawable
-        val canvas = Canvas(bitmap)
-        drawable?.setBounds(0, 0, canvas.width, canvas.height)
-        drawable?.draw(canvas)
+    private val serviceScope = CoroutineScope(Dispatchers.IO)
+    private fun tryGetBitmap(callback: (Bitmap?) -> Unit) {
+        serviceScope.launch {
+            if (DataStoreManager.isKuwoSelected.first().isTrue()) {
+
+                Glide.with(this@PlayService).asBitmap().load(PlayerManager.coverUrl).into(object : CustomTarget<Bitmap>() {
+                    override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                        callback(resource)
+                    }
+
+                    override fun onLoadCleared(placeholder: Drawable?) {
+                    }
+                })
+            }
+        }
+    }
+
+    inner class MyBinder : Binder() {
+        fun getService() : PlayService = this@PlayService
     }
 }

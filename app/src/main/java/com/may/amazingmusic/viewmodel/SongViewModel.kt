@@ -78,8 +78,9 @@ class SongViewModel : ViewModel() {
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
-
+    val songCoverUrl: MutableLiveData<String> = MutableLiveData()
     fun addSongToPlaylist(song: Song, playNow: Boolean = false) {
+        songCoverUrl.postValue(song.coverUrl)
         val position = PlayerManager.playlist.indexOfFirst { it.sid == song.sid }
         Log.d(TAG, "addSongToPlaylist: position=$position, play now=$playNow")
         if (playNow) {
@@ -136,7 +137,6 @@ class SongViewModel : ViewModel() {
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
-
     fun findSongsByAny(keyword: String?) {
         if (keyword.isNullOrEmpty()) {
             searchSongs.tryEmit(emptyList())

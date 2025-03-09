@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.annotation.OptIn
 import androidx.lifecycle.MutableLiveData
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.StandaloneDatabaseProvider
@@ -20,13 +21,11 @@ import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_LOOP
 import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SHUFFLE
 import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SINGLE
 import com.may.amazingmusic.constant.NetWorkConst.FUN_VIDEO_URL
-import com.may.amazingmusic.utils.DataStoreManager
+import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.isTrue
+import com.may.amazingmusic.utils.moreThanOne
 import com.may.amazingmusic.utils.orInvalid
 import com.may.amazingmusic.utils.orZero
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import java.io.File
 import kotlin.system.exitProcess
@@ -52,6 +51,9 @@ object PlayerManager {
     var stopUntilThisOver = false
     val disableTimer = MutableLiveData(false)
 
+    var coverUrl = ""
+    var isKuwoSource = false
+
     fun setPlayerListener() {
         player?.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -72,14 +74,24 @@ object PlayerManager {
                     stopUntilThisOver = false
                     exitProcess(0)
                 } else {
-                    player?.play()
+                    player?.prepare()
                     player?.playWhenReady = true
                     playingSongUrl = player?.currentMediaItem?.localConfiguration?.uri?.toString()
                     if (player?.currentMediaItem != funVideoMediaItem) {
-                        curSongIndexLiveData.postValue(player?.currentMediaItemIndex.orInvalid())
+                        val index = player?.currentMediaItemIndex.orInvalid()
+                        curSongIndexLiveData.postValue(index)
                     }
                 }
                 super.onMediaItemTransition(mediaItem, reason)
+            }
+
+            override fun onPlayerError(error: PlaybackException) {
+                super.onPlayerError(error)
+                ToastyUtils.warning("资源播放错误，自动播放下一首")
+                if (playlist.size.moreThanOne()) {
+                    player?.playWhenReady = true
+                    playNextSong()
+                }
             }
         })
     }
@@ -179,7 +191,6 @@ object PlayerManager {
         return simpleCache!!
     }
 
-    // for test
     fun addAnalyticsListenerForTest() {
         player?.addAnalyticsListener(object : AnalyticsListener {
             override fun onBandwidthEstimate(

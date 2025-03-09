@@ -1,6 +1,7 @@
 package com.may.amazingmusic.utils
 
 import com.may.amazingmusic.constant.NetWorkConst
+import com.may.amazingmusic.utils.network.KuwoApi
 import com.may.amazingmusic.utils.network.NetWorkApi
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -18,7 +19,15 @@ object RetrofitService {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
+
+    private val kuwoRetrofit = Retrofit.Builder()
+        .baseUrl(NetWorkConst.KUWO_BASE_URL)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
     fun getApi(): NetWorkApi {
         return retrofit.create()
     }
+
+    fun getKuwoApi(): KuwoApi = kuwoRetrofit.create()
 }
