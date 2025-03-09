@@ -6,7 +6,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
@@ -458,7 +457,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                         .setUri(it)
                         .setMediaMetadata(MediaMetadata.Builder()
                             .setTitle(song.title).setArtist(song.singer)
-                            .setArtworkUri(Uri.parse(song.coverUrl))
                             .build()
                         )
                         .build()
@@ -486,7 +484,17 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 val positionAdded = if (addToLast) {
                     player.mediaItemCount
                 } else player.currentMediaItemIndex + 1
-                song.url?.let { MediaItem.fromUri(it) }?.let {
+                song.url?.let {
+                    if (PlayerManager.isKuwoSource) {
+                        MediaItem.Builder()
+                            .setUri(it)
+                            .setMediaMetadata(MediaMetadata.Builder()
+                                .setTitle(song.title).setArtist(song.singer)
+                                .build()
+                            )
+                            .build()
+                    } else MediaItem.fromUri(it)
+                }?.let {
                     player.addMediaItem(positionAdded, it)
                     PlayerManager.playlist.add(positionAdded, song)
                     playlistAdapter?.setSongToPlaylist()
