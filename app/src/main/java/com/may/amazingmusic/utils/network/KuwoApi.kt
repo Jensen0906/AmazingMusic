@@ -11,8 +11,8 @@ import retrofit2.http.Query
 interface KuwoApi {
 
     @GET("KoWo_Dg.php")
-    suspend fun searchSongResult(@Query("type") type: String, @Query("msg") keyword: String) : ApiResult<List<KuwoSong>?>
+    suspend fun searchSongResult(@Query("type") type: String, @Query("msg") keyword: String): ApiResult<List<KuwoSong>?>
 
     @GET("KoWo_Dg.php")
-    suspend fun selectSongResult(@Query("type") type: String, @Query("msg") keyword: String, @Query("n") index: Int) : ApiResult<KuwoSong?>
+    suspend fun selectSongResult(@Query("type") type: String, @Query("msg") keyword: String, @Query("n") index: Int): ApiResult<KuwoSong?>
 }

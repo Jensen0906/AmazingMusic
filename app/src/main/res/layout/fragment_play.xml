@@ -15,17 +15,13 @@
             android:id="@+id/player_view"
             android:layout_width="match_parent"
             android:layout_height="500dp"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:show_fastforward_button="false"
-            app:show_next_button="false"
-            app:show_previous_button="false"
-            app:show_rewind_button="false"
-            app:show_subtitle_button="false"
-            app:show_vr_button="false"
-            app:show_buffering="when_playing" />
+            app:show_buffering="when_playing"
+            app:use_controller="false" />
 
         <ImageView
             android:id="@+id/song_cover"

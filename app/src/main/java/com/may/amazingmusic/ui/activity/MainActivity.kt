@@ -50,6 +50,7 @@ import com.may.amazingmusic.ui.fragment.SettingsFragment
 import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseActivity
+import com.may.amazingmusic.utils.isFalse
 import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.orInvalid
 import com.may.amazingmusic.utils.orZero
@@ -212,9 +213,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 playlistBinding.playlistRv.scrollToPosition(it)
             }
 
-            if (it >= 0) {
+            if (it >= 0 && PlayerManager.playlist.isNotEmpty()) {
                 PlayerManager.coverUrl = PlayerManager.playlist[it].coverUrl ?: ""
-                songViewModel.songCoverUrl.postValue(PlayerManager.coverUrl)
             }
             playService?.updateSongInfo()
         }
@@ -287,9 +287,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
         binding.displayPlayerIv.setOnClickListener {
             switchFragment(if (currentFragment == playFragment) lastFragment else playFragment)
-            if (hasOpenPlayer.isTrue()) {
-                playFragment.setPlayer()
-            } else {
+            if (hasOpenPlayer.isFalse()) {
                 hasOpenPlayer = true
             }
         }
@@ -423,6 +421,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             playService = null
         }
     }
+
     private fun justPlayFirstSong(song: Song) {
         Log.d(TAG, "justPlayFirstSong: song=${song.title}")
         PlayerManager.clearPlaylist()
@@ -455,9 +454,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 if (PlayerManager.isKuwoSource) {
                     MediaItem.Builder()
                         .setUri(it)
-                        .setMediaMetadata(MediaMetadata.Builder()
-                            .setTitle(song.title).setArtist(song.singer)
-                            .build()
+                        .setMediaMetadata(
+                            MediaMetadata.Builder()
+                                .setTitle(song.title).setArtist(song.singer)
+                                .build()
                         )
                         .build()
                 } else MediaItem.fromUri(it)
@@ -488,9 +488,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     if (PlayerManager.isKuwoSource) {
                         MediaItem.Builder()
                             .setUri(it)
-                            .setMediaMetadata(MediaMetadata.Builder()
-                                .setTitle(song.title).setArtist(song.singer)
-                                .build()
+                            .setMediaMetadata(
+                                MediaMetadata.Builder()
+                                    .setTitle(song.title).setArtist(song.singer)
+                                    .build()
                             )
                             .build()
                     } else MediaItem.fromUri(it)
