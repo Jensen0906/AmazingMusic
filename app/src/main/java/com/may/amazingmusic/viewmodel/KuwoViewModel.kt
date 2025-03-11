@@ -34,21 +34,7 @@ class KuwoViewModel : ViewModel() {
         }
         this.keyword = keyword
         viewModelScope.launch {
-            repository.searchSongs(searchSongs, keyword)
-        }
-    }
-
-    val selectSong = MutableSharedFlow<KuwoSong?>(
-        replay = 0,
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
-    fun selectSong(index: Int, rid: String) {
-        if (index <= 0) {
-            selectSong.tryEmit(null)
-        }
-        viewModelScope.launch {
-            repository.selectSong(selectSong, keyword, index, rid)
+            repository.searchSongs(searchSongs, keyword, 1, 10)
         }
     }
 

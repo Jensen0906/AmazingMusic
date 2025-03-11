@@ -16,7 +16,6 @@ import android.view.View
 import android.view.WindowManager
 import androidx.annotation.OptIn
 import androidx.appcompat.app.ActionBarDrawerToggle
-import androidx.core.view.isGone
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -27,6 +26,9 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.may.amazingmusic.R
 import com.may.amazingmusic.bean.Song
 import com.may.amazingmusic.constant.BaseWorkConst.ADD_LIST_AND_PLAY
@@ -215,6 +217,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
             if (it >= 0 && PlayerManager.playlist.isNotEmpty()) {
                 PlayerManager.coverUrl = PlayerManager.playlist[it].coverUrl ?: ""
+                songViewModel.currentSongPic.postValue(PlayerManager.coverUrl)
             }
             playService?.updateSongInfo()
         }
@@ -231,7 +234,14 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     }
                 )
             }
+        }
 
+        songViewModel.currentSongPic.observe(this) {
+            Glide.with(this)
+                .load(PlayerManager.coverUrl)
+                .placeholder(R.drawable.amazingmusic).error(R.drawable.amazingmusic)
+                .transform(CenterCrop(), RoundedCorners(30))
+                .into(binding.displayPlayerIv)
         }
     }
 
@@ -276,11 +286,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             true
         }
         binding.searchIv.setOnClickListener {
-            if (binding.searchInputLayout.isGone) {
-                switchFragment(searchFragment)
-            } else {
-                searchFragment.searchSong(binding.searchKeyword.text?.toString())
-            }
+            switchFragment(searchFragment)
         }
         binding.playAllBtn.setOnClickListener {
             songViewModel.addAllSongsToPlaylist()
@@ -430,14 +436,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         if (isPlayServiceBinding.isTrue() && PlayerManager.player == null) unbindService(serviceConnection)
 
         if (PlayerManager.player == null) {
-            if (PlayerManager.isKuwoSource) {
-                PlayerManager.player = ExoPlayer.Builder(this).build()
-            } else {
-                val dataSourceFactory = PlayerManager.buildCacheDataSourceFactory(this)
-                PlayerManager.player = ExoPlayer.Builder(this)
-                    .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
-                    .build()
-            }
+            val dataSourceFactory = PlayerManager.buildCacheDataSourceFactory(this)
+            PlayerManager.player = ExoPlayer.Builder(this)
+                .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+                .build()
 
             PlayerManager.setPlayerListener()
             PlayerManager.addAnalyticsListenerForTest()
@@ -554,24 +556,21 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
 
         if (currentFragment == searchFragment) {
-            binding.searchKeyword.setText("")
             searchFragment.clearAdapterView()
         }
 
         currentFragment = fragment
 
-        binding.displayPlayerIv.setImageResource(
-            if (currentFragment == playFragment) R.drawable.icon_arrow_down else R.drawable.icon_arrow_up
-        )
+//        binding.displayPlayerIv.setImageResource(
+//            if (currentFragment == playFragment) R.drawable.icon_arrow_down else R.drawable.icon_arrow_up
+//        )
         binding.searchIv.visibility =
-            if (currentFragment == homeFragment || currentFragment == searchFragment) View.VISIBLE else View.GONE
+            if (currentFragment == homeFragment) View.VISIBLE else View.GONE
 
-        if (currentFragment == searchFragment) {
-            supportActionBar?.setDisplayShowTitleEnabled(false)
-            binding.searchInputLayout.visibility = View.VISIBLE
+        if (currentFragment == searchFragment || currentFragment == playFragment) {
+            supportActionBar?.hide()
         } else {
-            supportActionBar?.setDisplayShowTitleEnabled(true)
-            binding.searchInputLayout.visibility = View.GONE
+            supportActionBar?.show()
         }
         binding.notifyIv.visibility = if (currentFragment == mineFragment) View.VISIBLE else View.GONE
         binding.playAllBtn.visibility = if (currentFragment == favoriteFragment) View.VISIBLE else View.GONE

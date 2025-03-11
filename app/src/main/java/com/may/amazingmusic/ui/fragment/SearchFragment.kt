@@ -1,10 +1,13 @@
 package com.may.amazingmusic.ui.fragment
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -20,6 +23,8 @@ import com.may.amazingmusic.ui.adapter.SongsAdapter
 import com.may.amazingmusic.ui.adapter.SongsItemClickListener
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseFragment
+import com.may.amazingmusic.utils.convertToSong
+import com.may.amazingmusic.utils.isFalse
 import com.may.amazingmusic.utils.moreThanOne
 import com.may.amazingmusic.utils.player.PlayerManager
 import com.may.amazingmusic.viewmodel.KuwoViewModel
@@ -50,18 +55,27 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         initDataAndView()
-        collectAndObserver()
+        binding.searchKeyword.setOnEditorActionListener { _, actionId, _ ->
+            Log.e(TAG, "displayInfo: actionId=$actionId")
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                val imm = requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(binding.searchKeyword.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
+
+                searchSong(binding.searchKeyword.text?.toString())
+                true
+            } else false
+        }
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        collectAndObserver()
     }
 
     override fun setDataBinding(): FragmentSearchBinding {
         return FragmentSearchBinding.inflate(layoutInflater)
-    }
-
-    fun searchSong(keyword: String?) {
-        binding.loading.visibility = View.VISIBLE
-        if (PlayerManager.isKuwoSource) kuwoViewModel.searchSongs(keyword) else songViewModel.findSongsByAny(keyword)
-        clearAdapterView()
     }
 
     fun clearAdapterView() {
@@ -95,8 +109,9 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
 
         kuwoSongAdapter = KuwoSongAdapter(kuwoSongs, object : KuwoSongClickListener {
             override fun itemClickListener(song: KuwoSong) {
-                Log.d(TAG, "itemClickListener: $song")
-                kuwoViewModel.selectSong(song.index, song.songRid ?: "")
+                binding.searchSongsRv.isClickable = false
+                binding.loading.visibility = View.VISIBLE
+                songViewModel.addSongToPlaylist(song.convertToSong(), true)
             }
         })
         if (PlayerManager.isKuwoSource) {
@@ -106,6 +121,13 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
             binding.searchSongsRv.adapter = adapter
             binding.searchSongsRv.layoutManager = LinearLayoutManager(requireContext())
         }
+
+    }
+
+    private fun searchSong(keyword: String?) {
+        binding.loading.visibility = View.VISIBLE
+        if (PlayerManager.isKuwoSource) kuwoViewModel.searchSongs(keyword) else songViewModel.findSongsByAny(keyword)
+        clearAdapterView()
     }
 
     private val favoriteChangedSids = mutableListOf<Long>()
@@ -160,20 +182,11 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
             }
         }
 
-        lifecycleScope.launch {
-            kuwoViewModel.selectSong.collect {
-                if (it?.url.isNullOrBlank()) {
-                    ToastyUtils.error("哦豁，没有找到该歌曲的播放链接")
-                    return@collect
-                }
-                val song = Song().also { song ->
-                    song.sid = it?.songRid?.toLong() ?: -1
-                    song.singer = it?.singer
-                    song.title = it?.songname
-                    song.url = it?.url
-                    song.coverUrl = it?.cover
-                }
-                songViewModel.addSongToPlaylist(song, true)
+        PlayerManager.isLoadingLiveData.observe(viewLifecycleOwner) {
+            Log.e(TAG, "collectAndObserver: isLoading=$it")
+            if (it.isFalse()) {
+                binding.searchSongsRv.isClickable = true
+                binding.loading.visibility = View.GONE
             }
         }
     }

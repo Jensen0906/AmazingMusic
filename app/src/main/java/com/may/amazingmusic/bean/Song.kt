@@ -24,6 +24,8 @@ class Song() : Parcelable {
 
     var coverUrl : String? = null
 
+    var lrc : String? = null
+
 
 
     constructor(parcel: Parcel) : this() {
@@ -34,6 +36,7 @@ class Song() : Parcelable {
         url = parcel.readString()
         isFavorite = parcel.readByte() != 0.toByte()
         coverUrl = parcel.readString()
+        lrc = parcel.readString()
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -44,6 +47,7 @@ class Song() : Parcelable {
         parcel.writeString(url)
         parcel.writeByte(if (isFavorite) 1 else 0)
         parcel.writeString(coverUrl)
+        parcel.writeString(lrc)
     }
 
     override fun describeContents(): Int {
@@ -51,8 +55,9 @@ class Song() : Parcelable {
     }
 
     override fun toString(): String {
-        return "Song(sid=$sid, title=$title, singer=$singer, album=$album, url=$url, isFavorite=$isFavorite, coverUrl='$coverUrl')"
+        return "Song(sid=$sid, title=$title, singer=$singer, album=$album, url=$url, isFavorite=$isFavorite, coverUrl=$coverUrl, lrc=$lrc)"
     }
+
 
     companion object CREATOR : Parcelable.Creator<Song> {
         override fun createFromParcel(parcel: Parcel): Song {

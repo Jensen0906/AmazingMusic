@@ -4,6 +4,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.may.amazingmusic.App.Companion.appContext
 import com.may.amazingmusic.R
 import com.may.amazingmusic.bean.KuwoSong
@@ -32,9 +34,9 @@ class KuwoSongAdapter(private var songList: List<KuwoSong>, private val clickLis
 
         holder.itemKuwoSongBinding.song = song
         Glide.with(appContext)
-            .load(song.cover)
+            .load(song.pic)
             .placeholder(R.drawable.amazingmusic).error(R.drawable.amazingmusic)
-            .circleCrop()
+            .transform(CenterCrop(), RoundedCorners(30))
             .into(holder.itemKuwoSongBinding.songImg)
         holder.itemKuwoSongBinding.root.setOnClickListener { clickListener.itemClickListener(song) }
     }

@@ -46,6 +46,7 @@ object PlayerManager {
     var page = 1
     val curSongIndexLiveData = MutableLiveData(-1)
     val repeatModeLiveData = MutableLiveData(ExoPlayer.REPEAT_MODE_OFF)
+    val isLoadingLiveData = MutableLiveData(false)
 
     val playlist: MutableList<Song> = mutableListOf()
     var stopUntilThisOver = false
@@ -64,6 +65,11 @@ object PlayerManager {
                     )
                 }
                 super.onIsPlayingChanged(isPlaying)
+            }
+
+            override fun onIsLoadingChanged(isLoading: Boolean) {
+                isLoadingLiveData.postValue(isLoading)
+                super.onIsLoadingChanged(isLoading)
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {

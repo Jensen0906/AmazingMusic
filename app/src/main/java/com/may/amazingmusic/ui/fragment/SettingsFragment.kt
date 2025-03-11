@@ -94,7 +94,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 timerSwitch?.isChecked = it.isTrue()
             }
         }
-        PlayerManager.disableTimer.observe(requireActivity()) {
+        timerSwitch?.summaryOn = getString(R.string.timer_summary_on, timeList?.value)
+        timerSwitch?.isChecked = PlayerManager.playlist.isNotEmpty()
+        timerSwitch?.isEnabled = PlayerManager.playlist.isNotEmpty()
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        PlayerManager.disableTimer.observe(viewLifecycleOwner) {
             if (PlayerManager.playlist.isEmpty() && it.isFalse()) {
                 lifecycleScope.launch {
                     DataStoreManager.updateTimerOpened(false)
@@ -103,9 +110,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 timerSwitch?.isEnabled = false
             }
         }
-        timerSwitch?.summaryOn = getString(R.string.timer_summary_on, timeList?.value)
-        timerSwitch?.isChecked = PlayerManager.playlist.isNotEmpty()
-        timerSwitch?.isEnabled = PlayerManager.playlist.isNotEmpty()
     }
 
     private fun setFeedbackCategory() {

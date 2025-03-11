@@ -30,6 +30,16 @@ class PlayFragment : BaseFragment<FragmentPlayBinding>() {
         setPlayer()
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        songViewModel.currentSongPic.observe(viewLifecycleOwner) {
+            Glide.with(requireActivity())
+                .load(PlayerManager.coverUrl)
+                .placeholder(R.drawable.amazingmusic).error(R.drawable.amazingmusic)
+                .into(binding.songCover)
+        }
+    }
+
     private fun setPlayer() {
         if (PlayerManager.isKuwoSource) {
             binding.playerView.visibility = View.GONE
