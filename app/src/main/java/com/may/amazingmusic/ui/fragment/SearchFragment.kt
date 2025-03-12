@@ -76,6 +76,9 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
                 imm.hideSoftInputFromWindow(binding.searchKeyword.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
 
                 PlayerManager.kuwoPage = 1
+                kuwoSongs.clear()
+                kuwoSongAdapter.updateSongs(kuwoSongs)
+
                 searchSong(binding.searchKeyword.text?.toString())
                 clearAdapterView()
                 true

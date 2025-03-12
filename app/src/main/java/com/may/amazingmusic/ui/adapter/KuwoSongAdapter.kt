@@ -1,5 +1,6 @@
 package com.may.amazingmusic.ui.adapter
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -65,6 +66,12 @@ class KuwoSongAdapter(
     fun updateSongs(newSongList: List<KuwoSong>, page: Int) {
         this.songList = newSongList
         notifyItemInserted(page * 10 - 1)
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun updateSongs(newSongList: List<KuwoSong>) {
+        this.songList = newSongList
+        notifyDataSetChanged()
     }
 
     fun setLoading(loading: Boolean) {

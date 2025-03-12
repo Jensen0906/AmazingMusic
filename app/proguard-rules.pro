@@ -19,3 +19,6 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# 保留所有类（不混淆），但混淆 com.example.myapp.internal 包下的类
+-keep class !com.may.amazingmusic.constant.** { *; }
