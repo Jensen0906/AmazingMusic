@@ -1,7 +1,7 @@
 # AmazingMusic
 Listen music for free
 
-### If you have any problem,  creat a issue. 
+### If you have any problem,  create a issue. 
 
 ### 如果你有任何问题，请提Issue。
 
