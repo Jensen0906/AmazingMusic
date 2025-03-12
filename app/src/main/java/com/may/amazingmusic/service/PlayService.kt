@@ -105,7 +105,6 @@ class PlayService : Service() {
 
         updateSongInfo()
 
-        setPlayerNotification()
         startForeground(notificationId, NotificationCompat.Builder(this, channelId).build())
 
         registerHeadphone()
@@ -125,6 +124,7 @@ class PlayService : Service() {
 
     fun updateSongInfo() {
         tryGetBitmap {
+            Log.e(TAG, "updateSongInfo: bitmap=$it")
             if (it == null) {
                 val drawable = ContextCompat.getDrawable(appContext, R.drawable.music_background) as? VectorDrawable
                 val canvas = Canvas(bitmap)
@@ -134,6 +134,7 @@ class PlayService : Service() {
                 bitmap = it
             }
         }
+        setPlayerNotification()
     }
 
     private fun registerHeadphone() {

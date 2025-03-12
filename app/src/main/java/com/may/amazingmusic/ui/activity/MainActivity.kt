@@ -216,10 +216,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }
 
             if (it >= 0 && PlayerManager.playlist.isNotEmpty()) {
-                PlayerManager.coverUrl = PlayerManager.playlist[it].coverUrl ?: ""
                 songViewModel.currentSongPic.postValue(PlayerManager.coverUrl)
             }
-            playService?.updateSongInfo()
         }
 
         PlayerManager.repeatModeLiveData.observe(this) {
@@ -245,6 +243,20 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
     }
 
+    override fun onPause() {
+        Log.w(TAG, "onPause: ")
+        super.onPause()
+    }
+
+    override fun onStop() {
+        Log.w(TAG, "onStop: ")
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        Log.e(TAG, "onDestroy: ")
+        super.onDestroy()
+    }
     private fun onClick() {
         val drawerToggle = ActionBarDrawerToggle(
             this,
@@ -415,16 +427,15 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
 
     private var isPlayServiceBinding = false
-    private var playService: PlayService? = null
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             isPlayServiceBinding = true
-            playService = (service as PlayService.MyBinder).getService()
+            PlayerManager.setService((service as PlayService.MyBinder).getService())
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             isPlayServiceBinding = false
-            playService = null
+            PlayerManager.setService(null)
         }
     }
 
@@ -464,8 +475,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                         .build()
                 } else MediaItem.fromUri(it)
             }?.let {
-                player.setMediaItem(it)
                 PlayerManager.playlist.add(song)
+                player.setMediaItem(it)
             }
             playlistAdapter?.resetPlaylist(song)
             player.prepare()
@@ -498,8 +509,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                             .build()
                     } else MediaItem.fromUri(it)
                 }?.let {
-                    player.addMediaItem(positionAdded, it)
                     PlayerManager.playlist.add(positionAdded, song)
+                    player.addMediaItem(positionAdded, it)
                     playlistAdapter?.setSongToPlaylist()
                 }
                 if (playNow) {

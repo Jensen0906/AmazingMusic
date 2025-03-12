@@ -21,6 +21,7 @@ import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_LOOP
 import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SHUFFLE
 import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SINGLE
 import com.may.amazingmusic.constant.NetWorkConst.FUN_VIDEO_URL
+import com.may.amazingmusic.service.PlayService
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.moreThanOne
@@ -86,6 +87,11 @@ object PlayerManager {
                     if (player?.currentMediaItem != funVideoMediaItem) {
                         val index = player?.currentMediaItemIndex.orInvalid()
                         curSongIndexLiveData.postValue(index)
+                        Log.e(TAG, "onMediaItemTransition: updateSongInfo, ")
+                        if (index >= 0 && playlist.isNotEmpty()) {
+                            coverUrl = playlist[index].coverUrl ?: ""
+                        }
+                        playService?.updateSongInfo()
                     }
                 }
                 super.onMediaItemTransition(mediaItem, reason)
@@ -182,7 +188,14 @@ object PlayerManager {
         player?.clearMediaItems()
         playlist.clear()
         curSongIndexLiveData.postValue(-1)
+        coverUrl = ""
         disableTimer.postValue(false)
+        playService?.updateSongInfo()
+    }
+
+    private var playService: PlayService? = null
+    fun setService(playService: PlayService?) {
+        this.playService = playService
     }
 
     private var simpleCache: SimpleCache? = null
