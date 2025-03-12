@@ -238,7 +238,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             Glide.with(this)
                 .load(PlayerManager.coverUrl)
                 .placeholder(R.drawable.amazingmusic).error(R.drawable.amazingmusic)
-                .transform(CenterCrop(), RoundedCorners(30))
+                .transform(CenterCrop(), RoundedCorners(54))
                 .into(binding.displayPlayerIv)
         }
     }

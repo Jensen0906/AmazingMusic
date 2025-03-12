@@ -45,6 +45,7 @@ object PlayerManager {
     var playerListener: PlayerListener? = null
     var playingSongUrl: String? = null
     var page = 1
+    var kuwoPage = 1
     val curSongIndexLiveData = MutableLiveData(-1)
     val repeatModeLiveData = MutableLiveData(ExoPlayer.REPEAT_MODE_OFF)
     val isLoadingLiveData = MutableLiveData(false)

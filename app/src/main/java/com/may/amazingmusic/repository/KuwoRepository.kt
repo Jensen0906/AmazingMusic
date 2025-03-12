@@ -1,6 +1,5 @@
 package com.may.amazingmusic.repository
 
-import android.util.Log
 import com.may.amazingmusic.bean.KuwoSong
 import com.may.amazingmusic.utils.RetrofitService
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -17,12 +16,7 @@ class KuwoRepository {
     suspend fun searchSongs(songs: MutableSharedFlow<List<KuwoSong>?>, keyword: String, page: Int, limit: Int) {
         runCatching {
             val result = api.searchSongResult(keyword, page, limit)
-            val kuwoSongs = ArrayList<KuwoSong>()
-            result.data?.forEach {
-                kuwoSongs.add(it)
-                songs.tryEmit(kuwoSongs)
-            }
-            Log.d(TAG, "searchSongs: result.code=${result.code}, result.data=${result.data}")
+            songs.tryEmit(result.data)
         }.onFailure {
             it.printStackTrace()
             songs.tryEmit(null)

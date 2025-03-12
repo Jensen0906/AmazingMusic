@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.may.amazingmusic.bean.KuwoSong
 import com.may.amazingmusic.bean.Song
 import com.may.amazingmusic.databinding.FragmentSearchBinding
@@ -25,7 +26,7 @@ import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseFragment
 import com.may.amazingmusic.utils.convertToSong
 import com.may.amazingmusic.utils.isFalse
-import com.may.amazingmusic.utils.moreThanOne
+import com.may.amazingmusic.utils.orZero
 import com.may.amazingmusic.utils.player.PlayerManager
 import com.may.amazingmusic.viewmodel.KuwoViewModel
 import com.may.amazingmusic.viewmodel.SongViewModel
@@ -46,6 +47,19 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
     private lateinit var kuwoSongAdapter: KuwoSongAdapter
     private val songs: MutableList<Song> = mutableListOf()
     private val kuwoSongs: MutableList<KuwoSong> = mutableListOf()
+    private var keyword: String? = null
+
+    private val scrollListener = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            val layoutManager = recyclerView.layoutManager as? LinearLayoutManager
+            val lastChildView = layoutManager?.getChildAt(layoutManager.childCount - 1)
+            val lastPosition = lastChildView?.let { layoutManager.getPosition(it) }
+
+            if (lastPosition == layoutManager?.itemCount.orZero() - 1) {
+                searchSong(keyword)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,7 +75,9 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
                 val imm = requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(binding.searchKeyword.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
 
+                PlayerManager.kuwoPage = 1
                 searchSong(binding.searchKeyword.text?.toString())
+                clearAdapterView()
                 true
             } else false
         }
@@ -82,7 +98,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
         Log.d(TAG, "clearAdapterView: ")
         songs.clear()
         adapter.updateSongs(songs)
-        kuwoSongAdapter.updateSongs(kuwoSongs)
+//        kuwoSongAdapter.updateSongs(kuwoSongs)
     }
 
     private fun initDataAndView() {
@@ -117,6 +133,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
         if (PlayerManager.isKuwoSource) {
             binding.searchSongsRv.adapter = kuwoSongAdapter
             binding.searchSongsRv.layoutManager = LinearLayoutManager(requireContext())
+            binding.searchSongsRv.addOnScrollListener(scrollListener)
         } else {
             binding.searchSongsRv.adapter = adapter
             binding.searchSongsRv.layoutManager = LinearLayoutManager(requireContext())
@@ -125,9 +142,11 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
     }
 
     private fun searchSong(keyword: String?) {
-        binding.loading.visibility = View.VISIBLE
+        binding.searchSongsRv.removeOnScrollListener(scrollListener)
+        this.keyword = keyword
+        kuwoSongAdapter.setLoading(true)
+        binding.loading.visibility = if (PlayerManager.isKuwoSource && PlayerManager.kuwoPage > 1) View.GONE else View.VISIBLE
         if (PlayerManager.isKuwoSource) kuwoViewModel.searchSongs(keyword) else songViewModel.findSongsByAny(keyword)
-        clearAdapterView()
     }
 
     private val favoriteChangedSids = mutableListOf<Long>()
@@ -167,18 +186,22 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
         lifecycleScope.launch {
             kuwoViewModel.searchSongs.collect {
                 binding.loading.visibility = View.GONE
+                binding.searchSongsRv.addOnScrollListener(scrollListener)
                 if (it.isNullOrEmpty()) {
-                    ToastyUtils.error("哦豁，没有找到相关歌曲")
+                    if (PlayerManager.kuwoPage >= 10) {
+                        ToastyUtils.warning("再玩要被玩坏了")
+                    } else {
+                        ToastyUtils.error("哦豁，没有找到相关歌曲")
+                    }
+                    kuwoSongAdapter.setLoading(false)
+                    binding.searchSongsRv.removeOnScrollListener(scrollListener)
                     return@collect
                 }
-                if (it.size.moreThanOne()) {
-                    kuwoSongs.add(it.last())
-                    kuwoSongAdapter.updateSongs(kuwoSongs, true)
-                } else {
-                    kuwoSongs.clear()
-                    kuwoSongs.addAll(it)
-                    kuwoSongAdapter.updateSongs(kuwoSongs)
-                }
+                PlayerManager.kuwoPage++
+
+                kuwoSongs.addAll(it)
+                kuwoSongAdapter.updateSongs(kuwoSongs, PlayerManager.kuwoPage)
+
             }
         }
 

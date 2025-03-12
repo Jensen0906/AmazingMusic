@@ -1,5 +1,6 @@
 package com.may.amazingmusic.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,6 +8,7 @@ import com.may.amazingmusic.bean.KuwoSong
 import com.may.amazingmusic.repository.KuwoRepository
 import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.isTrue
+import com.may.amazingmusic.utils.player.PlayerManager
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
@@ -28,13 +30,14 @@ class KuwoViewModel : ViewModel() {
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     fun searchSongs(keyword: String?) {
-        if (keyword.isNullOrEmpty()) {
+        if (keyword.isNullOrEmpty() || PlayerManager.kuwoPage >= 10) {
             searchSongs.tryEmit(emptyList())
             return
         }
         this.keyword = keyword
+        Log.e(TAG, "searchSongs: keyword=$keyword, page=${PlayerManager.kuwoPage}")
         viewModelScope.launch {
-            repository.searchSongs(searchSongs, keyword, 1, 10)
+            repository.searchSongs(searchSongs, keyword, PlayerManager.kuwoPage, 10)
         }
     }
 
