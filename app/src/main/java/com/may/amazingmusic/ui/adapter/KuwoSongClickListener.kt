@@ -8,5 +8,6 @@ import com.may.amazingmusic.bean.KuwoSong
  */
 interface KuwoSongClickListener {
     fun itemClickListener(song: KuwoSong)
-
+    fun addSongToList(song: KuwoSong)
+    fun favoriteClickListener(song: KuwoSong, position: Int)
 }

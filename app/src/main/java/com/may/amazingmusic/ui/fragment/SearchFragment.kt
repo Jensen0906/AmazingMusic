@@ -89,7 +89,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         collectAndObserver()
     }
 
@@ -123,21 +122,29 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
                 songViewModel.operateFavorite(song, position)
             }
         })
-
-        songViewModel.getFavoriteIds()
-
         kuwoSongAdapter = KuwoSongAdapter(kuwoSongs, object : KuwoSongClickListener {
             override fun itemClickListener(song: KuwoSong) {
                 binding.searchSongsRv.isClickable = false
                 binding.loading.visibility = View.VISIBLE
                 songViewModel.addSongToPlaylist(song.convertToSong(), true)
             }
+
+            override fun addSongToList(song: KuwoSong) {
+                songViewModel.addSongToPlaylist(song.convertToSong())
+            }
+
+            override fun favoriteClickListener(song: KuwoSong, position: Int) {
+                // TODO("Not yet implemented")
+            }
         })
+
         if (PlayerManager.isKuwoSource) {
+            kuwoViewModel.getMyKuwoSongRids()
             binding.searchSongsRv.adapter = kuwoSongAdapter
             binding.searchSongsRv.layoutManager = LinearLayoutManager(requireContext())
             binding.searchSongsRv.addOnScrollListener(scrollListener)
         } else {
+            songViewModel.getFavoriteIds()
             binding.searchSongsRv.adapter = adapter
             binding.searchSongsRv.layoutManager = LinearLayoutManager(requireContext())
         }
@@ -203,8 +210,17 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
                 PlayerManager.kuwoPage++
 
                 kuwoSongs.addAll(it)
-                kuwoSongAdapter.updateSongs(kuwoSongs, PlayerManager.kuwoPage)
+                Log.e(TAG, "collectAndObserver: kuwoSongAdapter.hasSetFavorite = ${kuwoSongAdapter.hasSetFavorite}", )
+                if (kuwoSongAdapter.hasSetFavorite) {
+                    kuwoSongAdapter.updateSongs(kuwoSongs, PlayerManager.kuwoPage)
+                }
+            }
+        }
 
+        lifecycleScope.launch {
+            kuwoViewModel.myKuwoSongRids.collect {
+                kuwoSongAdapter.setFavoriteKuwoSongRids(it)
+                kuwoSongAdapter.updateSongs(kuwoSongs)
             }
         }
 

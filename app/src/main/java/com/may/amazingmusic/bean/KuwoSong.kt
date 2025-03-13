@@ -12,8 +12,10 @@ class KuwoSong {
     var pic: String? = null
     var lrc: String? = null
     var url: String? = null
+    var uid = -1
+    var isFavorite = false
 
     override fun toString(): String {
-        return "KuwoSong(rid=$rid, vid=$vid, name=$name, artist=$artist, pic=$pic, lrc=$lrc, url=$url)"
+        return "KuwoSong(rid=$rid, vid=$vid, name=$name, artist=$artist, pic=$pic, lrc=$lrc, url=$url, uid=$uid, isFavorite=$isFavorite)"
     }
 }

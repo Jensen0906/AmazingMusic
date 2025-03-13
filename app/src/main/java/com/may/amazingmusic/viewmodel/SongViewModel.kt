@@ -128,7 +128,6 @@ class SongViewModel : ViewModel() {
             } else {
                 favoriteSids.tryEmit(emptyList())
             }
-
         }
     }
 

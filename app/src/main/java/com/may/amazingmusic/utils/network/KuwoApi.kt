@@ -11,5 +11,9 @@ import retrofit2.http.Query
 interface KuwoApi {
 
     @GET("/")
-    suspend fun searchSongResult(@Query("name") keyword: String, @Query("page") page: Int, @Query("limit") limit: Int): ApiResult<List<KuwoSong>?>
+    suspend fun searchSongResult(
+        @Query("name") keyword: String,
+        @Query("page") page: Int,
+        @Query("limit") limit: Int
+    ): ApiResult<List<KuwoSong>?>
 }

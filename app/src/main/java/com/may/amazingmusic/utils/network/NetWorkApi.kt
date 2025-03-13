@@ -1,5 +1,6 @@
 package com.may.amazingmusic.utils.network
 
+import com.may.amazingmusic.bean.KuwoSong
 import com.may.amazingmusic.bean.Song
 import com.may.amazingmusic.bean.User
 import okhttp3.RequestBody
@@ -38,4 +39,13 @@ interface NetWorkApi {
 
     @POST("feedback/addfeedback")
     suspend fun addFeedback(@Body body: RequestBody): ApiResult<Int?>
+
+    @POST("kuwo/get-kuwosongs")
+    suspend fun getFavoriteKuwoSongs(@Body body: RequestBody): ApiResult<List<KuwoSong>?>
+
+    @POST("kuwo/operate-kuwosong")
+    suspend fun operateFavoriteKuwoSong(@Body body: RequestBody): ApiResult<Int?>
+
+    @POST("kuwo/get-kuwosongrids")
+    suspend fun getKuwoSongRids(@Body body: RequestBody): ApiResult<List<Long>?>
 }

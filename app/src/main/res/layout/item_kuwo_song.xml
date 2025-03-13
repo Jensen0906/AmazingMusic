@@ -58,8 +58,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.8" />
+            app:layout_constraintGuide_percent="0.7" />
 
+        <ImageView
+            android:id="@+id/add_to_playlist"
+            android:layout_width="50dp"
+            android:layout_height="0dp"
+            android:gravity="center"
+            android:scaleType="center"
+            android:src="@drawable/ic_add"
+            android:tag="no_favorite"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/favorite_iv"
+            app:layout_constraintStart_toStartOf="@+id/guide_line"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
             android:id="@+id/favorite_iv"

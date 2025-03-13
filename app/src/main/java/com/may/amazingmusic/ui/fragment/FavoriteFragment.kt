@@ -1,27 +1,27 @@
 package com.may.amazingmusic.ui.fragment
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.OptIn
-import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.may.amazingmusic.bean.KuwoSong
 import com.may.amazingmusic.bean.Song
 import com.may.amazingmusic.databinding.FragmentFavoriteBinding
 import com.may.amazingmusic.ui.activity.MainActivity
+import com.may.amazingmusic.ui.adapter.KuwoSongAdapter
+import com.may.amazingmusic.ui.adapter.KuwoSongClickListener
 import com.may.amazingmusic.ui.adapter.SongsAdapter
 import com.may.amazingmusic.ui.adapter.SongsItemClickListener
-import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.base.BaseFragment
-import com.may.amazingmusic.utils.isTrue
+import com.may.amazingmusic.utils.convertToSong
+import com.may.amazingmusic.utils.player.PlayerManager
 import com.may.amazingmusic.viewmodel.KuwoViewModel
 import com.may.amazingmusic.viewmodel.SongViewModel
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -36,26 +36,29 @@ class FavoriteFragment : BaseFragment<FragmentFavoriteBinding>() {
 
     private lateinit var songViewModel: SongViewModel
     private lateinit var kuwoViewModel: KuwoViewModel
-    private var adapter: SongsAdapter? = null
+    private lateinit var adapter: SongsAdapter
+    private lateinit var kuwoSongAdapter: KuwoSongAdapter
 
     private val songs: MutableList<Song> = mutableListOf()
+    private val kuwoSongs: MutableList<KuwoSong> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         songViewModel = ViewModelProvider(requireActivity())[SongViewModel::class.java]
         kuwoViewModel = ViewModelProvider(requireActivity())[KuwoViewModel::class.java]
         super.onCreate(savedInstanceState)
+    }
 
-        lifecycleScope.launch {
-            if (DataStoreManager.isKuwoSelected.first().isTrue()) {
-                // todo adaptive Kuwo Source favorite operation
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        initAdapter()
+        return binding.root
+    }
 
-                binding.favoriteSongsRv.visibility = View.GONE
-                (activity as? MainActivity)?.makePlayAllEnable(false)
-            } else {
-                binding.favoriteSongsRv.visibility = View.VISIBLE
-            }
-        }
-        songViewModel.getFavoriteSongs()
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        initCollectAndObserve()
+    }
+
+    private fun initAdapter() {
         adapter = SongsAdapter(songs, object : SongsItemClickListener {
             override fun itemClickListener(song: Song) {
                 songViewModel.addSongToPlaylist(song, true)
@@ -74,19 +77,49 @@ class FavoriteFragment : BaseFragment<FragmentFavoriteBinding>() {
             }
 
         })
-        binding.favoriteSongsRv.adapter = adapter
-        binding.favoriteSongsRv.layoutManager = LinearLayoutManager(requireContext())
-    }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        songViewModel.favoriteSongs.observe(viewLifecycleOwner) {
-            Log.d(TAG, "adapter.setFavoriteSongs: $it")
-            adapter?.setFavoriteSongs(it)
-            (activity as? MainActivity)?.makePlayAllEnable(!it.isNullOrEmpty() && binding.favoriteSongsRv.isVisible)
+        kuwoSongAdapter = KuwoSongAdapter(kuwoSongs, object : KuwoSongClickListener {
+            override fun itemClickListener(song: KuwoSong) {
+                // TODO("Not yet implemented")
+            }
+
+            override fun addSongToList(song: KuwoSong) {
+                // TODO("Not yet implemented")
+            }
+
+            override fun favoriteClickListener(song: KuwoSong, position: Int) {
+            }
+
+        }, false )
+
+        if (PlayerManager.isKuwoSource) {
+            kuwoViewModel.getMyKuwoSongs()
+            binding.favoriteSongsRv.adapter = kuwoSongAdapter
+            binding.favoriteSongsRv.layoutManager = LinearLayoutManager(requireContext())
+        } else {
+            songViewModel.getFavoriteSongs()
+            binding.favoriteSongsRv.adapter = adapter
+            binding.favoriteSongsRv.layoutManager = LinearLayoutManager(requireContext())
         }
-        return binding.root
     }
 
+    private fun initCollectAndObserve() {
+        lifecycleScope.launch {
+            kuwoViewModel.myKuwoSongs.collect {
+                songViewModel.favoriteSongs.postValue(
+                    it?.map { kuwoSong ->
+                        kuwoSong.convertToSong()
+                    }
+                )
+                kuwoSongAdapter.setFavoriteKuwoSongs(it)
+                (activity as? MainActivity)?.makePlayAllEnable(!it.isNullOrEmpty(), true)
+            }
+        }
+        songViewModel.favoriteSongs.observe(viewLifecycleOwner) {
+            adapter.setFavoriteSongs(it)
+            (activity as? MainActivity)?.makePlayAllEnable(!it.isNullOrEmpty(), false)
+        }
+    }
     override fun setDataBinding(): FragmentFavoriteBinding {
         return FragmentFavoriteBinding.inflate(layoutInflater)
     }

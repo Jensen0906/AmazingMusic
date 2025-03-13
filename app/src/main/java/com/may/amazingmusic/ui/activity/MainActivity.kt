@@ -154,8 +154,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
     }
 
-    fun makePlayAllEnable(isEnable: Boolean) {
-        binding.playAllBtn.isEnabled = isEnable
+    fun makePlayAllEnable(isEnable: Boolean, isKuwoSong: Boolean) {
+        if (isKuwoSong == PlayerManager.isKuwoSource) {
+            binding.playAllBtn.isEnabled = isEnable
+        }
     }
 
     private var playlistAdapter: PlaylistAdapter? = null
