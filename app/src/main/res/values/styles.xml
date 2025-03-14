@@ -9,4 +9,10 @@
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowNoTitle">true</item>
     </style>
+
+    <style name="CustomSeekBar" parent="Widget.AppCompat.SeekBar">
+        <item name="android:progressTint">@color/progress_color</item>
+        <item name="android:thumbTint">@color/thumb_color</item>
+        <item name="android:backgroundTint">@color/track_color</item>
+    </style>
 </resources>

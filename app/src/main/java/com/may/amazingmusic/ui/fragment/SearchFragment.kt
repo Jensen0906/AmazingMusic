@@ -38,6 +38,7 @@ import kotlinx.coroutines.launch
  * @date 2024/10/20 21:28
  * @description SearchFragment
  */
+@OptIn(UnstableApi::class)
 class SearchFragment : BaseFragment<FragmentSearchBinding>() {
     private val TAG = this.javaClass.simpleName
 
@@ -160,7 +161,8 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
     }
 
     private val favoriteChangedSids = mutableListOf<Long>()
-//    private val fChangedKuwoRids = mutableListOf<Long>()
+
+    //    private val fChangedKuwoRids = mutableListOf<Long>()
     private fun collectAndObserver() {
         lifecycleScope.launch {
             songViewModel.searchSongs.collect {

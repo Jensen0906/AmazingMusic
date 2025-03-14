@@ -7,4 +7,7 @@
     <color name="playlist_split_view_color">#ADBCE4</color>
     <color name="button_text_color">#253550</color>
     <color name="playlist_playing_song_text_color">#1FA7AD</color>
+    <color name="progress_color">#6B8CFF</color>
+    <color name="thumb_color">#6B8CFF</color>
+    <color name="track_color">#CDDAFF</color>
 </resources>

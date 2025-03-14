@@ -1,6 +1,7 @@
 package com.may.amazingmusic.utils.network
 
 import com.may.amazingmusic.bean.KuwoSong
+import com.may.amazingmusic.bean.Lrclist
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -16,4 +17,10 @@ interface KuwoApi {
         @Query("page") page: Int,
         @Query("limit") limit: Int
     ): ApiResult<List<KuwoSong>?>
+
+    @GET("/")
+    suspend fun getLrc(
+        @Query("id") rid: Long,
+        @Query("type") type: String,
+    ): ApiResult<Lrclist?>
 }

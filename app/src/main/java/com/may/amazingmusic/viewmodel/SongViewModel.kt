@@ -39,7 +39,6 @@ class SongViewModel : ViewModel() {
     var checkGetSongs = false
 
     val currentSongPic = MutableLiveData("")
-
     val songs = MutableSharedFlow<List<Song>?>(
         replay = 0,
         extraBufferCapacity = 1,

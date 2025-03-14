@@ -1,5 +1,6 @@
 package com.may.amazingmusic.repository
 
+import androidx.lifecycle.MutableLiveData
 import com.may.amazingmusic.bean.KuwoSong
 import com.may.amazingmusic.constant.NetWorkConst
 import com.may.amazingmusic.utils.RetrofitService
@@ -53,6 +54,17 @@ class KuwoRepository {
         }.onFailure {
             it.printStackTrace()
             kuwoSongRids.tryEmit(null)
+        }
+    }
+
+
+    suspend fun getLrc(lrc: MutableLiveData<String?>, rid: Long) {
+        runCatching {
+            val result = kuwoApi.getLrc(rid, "lyr")
+            lrc.postValue(result.data?.lrclist)
+        }.onFailure {
+            it.printStackTrace()
+            lrc.postValue(null)
         }
     }
 }

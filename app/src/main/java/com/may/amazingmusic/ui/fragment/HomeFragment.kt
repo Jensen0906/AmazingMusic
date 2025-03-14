@@ -153,7 +153,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         }
     }
 
-    private fun refreshView() {
+    fun refreshView() {
         if (PlayerManager.isKuwoSource) {
             binding.loading.visibility = View.INVISIBLE
             binding.kuwoTips.visibility = View.VISIBLE
@@ -186,11 +186,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
                     ToastyUtils.warning(getString(R.string.get_songs_empty))
                     binding.songsRv.removeOnScrollListener(scrollListener)
                 } else if (songViewModel.checkGetSongs && (songs.isEmpty() || songs[0].sid != it[0].sid)) {
-                    Log.i(TAG, "this=${this@HomeFragment}, PlayerManager.page++, songs=$it")
                     songs.addAll(it)
                     setSongsHashMap(songs)
                     PlayerManager.page++
-                    Log.i(TAG, "onCreateView: adapter.hasSetFavorite=${adapter.hasSetFavorite}")
                     if (adapter.hasSetFavorite) adapter.updateSongs(songs, PlayerManager.page)
                 } else if (songs[0].sid == it[0].sid) {
                     PlayerManager.page++

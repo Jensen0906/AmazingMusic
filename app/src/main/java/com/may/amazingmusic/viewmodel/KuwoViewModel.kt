@@ -63,7 +63,6 @@ class KuwoViewModel : ViewModel() {
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     fun getMyKuwoSongs() {
-        Log.e(TAG, "getMyKuwoSongs: ")
         viewModelScope.launch {
             val uid = DataStoreManager.userIDFlow.first().orZero()
             if (uid > 0) {
@@ -114,14 +113,12 @@ class KuwoViewModel : ViewModel() {
         }
     }
 
-    val kuwoSongChanged = MutableSharedFlow<List<Long>>(
-        replay = 0,
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
-    fun notifyFavoriteChanged(sids: List<Long>) {
-        if (sids.isEmpty()) return
-        kuwoSongChanged.tryEmit(sids)
+    val currentLrc = MutableLiveData("")
+    fun getKuwoLrc(rid: Long) {
+        Log.e(TAG, "getKuwoLrc: ")
+        viewModelScope.launch {
+            repository.getLrc(currentLrc, rid)
+        }
     }
 
     val operateFavoriteSong = MutableSharedFlow<Triple<Long, Int, Boolean>>(
@@ -133,21 +130,5 @@ class KuwoViewModel : ViewModel() {
         operateFavoriteSong.tryEmit(Triple(rid, position, isFavorite))
     }
 
-//    fun addAllSongsToPlaylist() {
-//        viewModelScope.launch {
-//            val songs = myKuwoSongs.first()
-//            if (songs.isNullOrEmpty()) {
-//                ToastyUtils.error(App.appContext.getString(R.string.no_favorite_song))
-//                return@launch
-//            }
-//            PlayerManager.clearPlaylist()
-//            songs.forEachIndexed { index, song ->
-//                Log.d(TAG, "addAllSongsToPlaylist: index=$index, song=${song.title}")
-//                addSongToPlay.tryEmit(mapOf(Pair(song, BaseWorkConst.ADD_LIST_LAST)))
-//            }
-//            PlayerManager.playAsRepeatMode()
-//        }
-//
-//    }
 
 }

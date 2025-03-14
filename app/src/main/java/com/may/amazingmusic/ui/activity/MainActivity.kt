@@ -89,7 +89,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private var curSongPos = 0
     private val playerListener = object : PlayerListener {
         override fun onIsPlayingChanged(isPlaying: Boolean, title: String?) {
-            if (isPlaying.isTrue()) ToastyUtils.success("正在播放 - $title")
+//            if (isPlaying.isTrue()) ToastyUtils.success("正在播放 - $title")
             binding.playIv.setImageResource(
                 if (isPlaying) R.drawable.icon_pause else R.drawable.icon_play
             )
@@ -111,7 +111,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 .error(R.drawable.amazingmusic)
                 .transform(CenterCrop(), RoundedCorners(54))
                 .into(binding.displayPlayerIv)
-            songViewModel.currentSongPic.postValue(coverUrl)
+
+            if (PlayerManager.isKuwoSource) {
+                songViewModel.currentSongPic.postValue(coverUrl)
+                if (position >= 0 && position < PlayerManager.playlist.size) {
+                    kuwoViewModel.getKuwoLrc(PlayerManager.playlist[position].sid)
+                }
+            }
         }
     }
 
@@ -131,6 +137,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         kuwoViewModel.isKuwoSource()
         kuwoViewModel.isKuwoSource.observe(this) {
             PlayerManager.isKuwoSource = it
+            homeFragment.refreshView()
         }
 
         initViewAndAdapter()
@@ -563,17 +570,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         currentFragment = fragment
 
-//        binding.displayPlayerIv.setImageResource(
-//            if (currentFragment == playFragment) R.drawable.icon_arrow_down else R.drawable.icon_arrow_up
-//        )
         binding.searchIv.visibility =
             if (currentFragment == homeFragment) View.VISIBLE else View.GONE
 
-        if (currentFragment == searchFragment || currentFragment == playFragment) {
-            supportActionBar?.hide()
-        } else {
-            supportActionBar?.show()
-        }
         binding.notifyIv.visibility = if (currentFragment == mineFragment) View.VISIBLE else View.GONE
         binding.playAllBtn.visibility = if (currentFragment == favoriteFragment) View.VISIBLE else View.GONE
     }

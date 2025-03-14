@@ -15,8 +15,8 @@
             android:id="@+id/player_view"
             android:layout_width="match_parent"
             android:layout_height="500dp"
+            android:layout_marginTop="40dp"
             android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -27,10 +27,81 @@
             android:id="@+id/song_cover"
             android:layout_width="match_parent"
             android:layout_height="500dp"
-            app:layout_constraintBottom_toBottomOf="@+id/player_view"
+            android:layout_marginTop="40dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@+id/player_view"
-            app:layout_constraintTop_toTopOf="@+id/player_view" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:importantForAccessibility="no" />
+
+        <com.dirror.lyricviewx.LyricViewX
+            android:id="@+id/lrc_view"
+            android:layout_width="0dp"
+            android:layout_height="500dp"
+            android:layout_marginTop="40dp"
+            android:visibility="invisible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:text="@string/cover_tab"
+            app:layout_constraintBottom_toBottomOf="@+id/switch_display"
+            app:layout_constraintEnd_toStartOf="@+id/switch_display"
+            app:layout_constraintTop_toTopOf="@+id/switch_display" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_display"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/song_cover" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:text="@string/lyric_tab"
+            app:layout_constraintBottom_toBottomOf="@+id/switch_display"
+            app:layout_constraintStart_toEndOf="@+id/switch_display"
+            app:layout_constraintTop_toTopOf="@+id/switch_display" />
+
+        <TextView
+            android:id="@+id/time_cur"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_marginBottom="40dp"
+            android:text="@string/zero_display"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <androidx.appcompat.widget.AppCompatSeekBar
+            android:id="@+id/play_seek_bar"
+            style="@style/CustomSeekBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_marginEnd="6dp"
+            android:layout_marginBottom="40dp"
+            android:max="500"
+            android:background="@null"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/time_dur"
+            app:layout_constraintStart_toEndOf="@id/time_cur" />
+
+        <TextView
+            android:id="@+id/time_dur"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:layout_marginBottom="40dp"
+            android:text="@string/zero_display"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

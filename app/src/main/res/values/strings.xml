@@ -27,7 +27,6 @@
     <string name="get_songs_error">Song not obtained, please check the net</string>
     <string name="get_songs_empty">There are no more songs left</string>
     <string name="kuwo_selected_tips">Kuwo audio source status, there is currently no content on the homepage.\nUse the search function.</string>
-    <string name="kuwo_selected_tips2"></string>
     <!-- Preference Titles -->
     <string name="feedback_header">Feedback</string>
     <string name="timer_header">Timed Stop</string>
@@ -45,4 +44,7 @@
     <string name="stop_until_this_song_finish_title">Stop after song playing completed</string>
     <string name="source_select_title">Select a source</string>
     <string name="source_select_summary">Recommend using KuWo</string>
+    <string name="lyric_tab">lyric</string>
+    <string name="cover_tab">cover</string>
+    <string name="zero_display" translatable="false">00:00</string>
 </resources>

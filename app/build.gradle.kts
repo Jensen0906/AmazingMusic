@@ -12,8 +12,8 @@ android {
         applicationId = "com.may.amazingmusic"
         minSdk = 24
         targetSdk = 34
-        versionCode = 9
-        versionName = "1.10.25.0314"
+        versionCode = 12
+        versionName = "1.12.25.0315"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -75,4 +75,6 @@ dependencies {
     implementation(libs.glide)
     // toast
     implementation(libs.toasty)
+    // lrc display
+    implementation(libs.lyricViewX)
 }
