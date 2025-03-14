@@ -10,6 +10,7 @@ import com.may.amazingmusic.bean.User
 import com.may.amazingmusic.constant.NetWorkConst
 import com.may.amazingmusic.repository.KuwoRepository
 import com.may.amazingmusic.utils.DataStoreManager
+import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.orZero
 import com.may.amazingmusic.utils.player.PlayerManager
@@ -42,7 +43,6 @@ class KuwoViewModel : ViewModel() {
             return
         }
         this.keyword = keyword
-        Log.e(TAG, "searchSongs: keyword=$keyword, page=${PlayerManager.kuwoPage}")
         viewModelScope.launch {
             repository.searchSongs(searchSongs, keyword, PlayerManager.kuwoPage, 10)
         }
@@ -63,13 +63,13 @@ class KuwoViewModel : ViewModel() {
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     fun getMyKuwoSongs() {
+        Log.e(TAG, "getMyKuwoSongs: ")
         viewModelScope.launch {
             val uid = DataStoreManager.userIDFlow.first().orZero()
             if (uid > 0) {
                 val requestBody = Gson().toJson(User().apply {
                     this.uid = uid
                 }).toRequestBody(NetWorkConst.CONTENT_TYPE.toMediaTypeOrNull())
-                Log.e(TAG, "getMyKuwoSongs: requestBody=$requestBody")
                 repository.getFavoriteKuwoSongs(myKuwoSongs, requestBody)
             } else {
                 myKuwoSongs.tryEmit(emptyList())
@@ -89,12 +89,48 @@ class KuwoViewModel : ViewModel() {
                 val requestBody = Gson().toJson(User().apply {
                     this.uid = uid
                 }).toRequestBody(NetWorkConst.CONTENT_TYPE.toMediaTypeOrNull())
-                Log.e(TAG, "getMyKuwoSongs: requestBody=$requestBody")
                 repository.getKuwoSongRids(myKuwoSongRids, requestBody)
             } else {
-                myKuwoSongs.tryEmit(emptyList())
+                myKuwoSongRids.tryEmit(emptyList())
             }
         }
+    }
+
+    fun operateFavorite(song: KuwoSong, position: Int) {
+        viewModelScope.launch {
+            val uid = DataStoreManager.userIDFlow.first()
+            if (uid == null || uid < 0) {
+                ToastyUtils.info("请先登录！")
+                return@launch
+            }
+            val requestBody =
+                Gson().toJson(song.apply { this.uid = uid }).toRequestBody(NetWorkConst.CONTENT_TYPE.toMediaTypeOrNull())
+            val success = repository.operateFavoriteKuwoSong(requestBody)
+            if (success) {
+                song.isFavorite = !song.isFavorite
+                ToastyUtils.success(if (song.isFavorite) "收藏成功" else "取消收藏")
+                operateKuwoSongIds(song.rid, position, song.isFavorite)
+            }
+        }
+    }
+
+    val kuwoSongChanged = MutableSharedFlow<List<Long>>(
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    fun notifyFavoriteChanged(sids: List<Long>) {
+        if (sids.isEmpty()) return
+        kuwoSongChanged.tryEmit(sids)
+    }
+
+    val operateFavoriteSong = MutableSharedFlow<Triple<Long, Int, Boolean>>(
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    private fun operateKuwoSongIds(rid: Long, position: Int, isFavorite: Boolean = false) {
+        operateFavoriteSong.tryEmit(Triple(rid, position, isFavorite))
     }
 
 //    fun addAllSongsToPlaylist() {

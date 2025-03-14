@@ -88,6 +88,7 @@ class FavoriteFragment : BaseFragment<FragmentFavoriteBinding>() {
             }
 
             override fun favoriteClickListener(song: KuwoSong, position: Int) {
+                // Nothing need to do
             }
 
         }, false )

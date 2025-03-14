@@ -38,7 +38,7 @@ class KuwoRepository {
 
     suspend fun operateFavoriteKuwoSong(requestBody: RequestBody): Boolean {
         runCatching {
-            val result = baseApi.getFavoriteKuwoSongs(requestBody)
+            val result = baseApi.operateFavoriteKuwoSong(requestBody)
             return result.code == NetWorkConst.SUCCESS_STATUS
         }.onFailure {
             it.printStackTrace()

@@ -70,7 +70,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         initDataAndView()
         binding.searchKeyword.setOnEditorActionListener { _, actionId, _ ->
-            Log.e(TAG, "displayInfo: actionId=$actionId")
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 val imm = requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(binding.searchKeyword.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
@@ -100,7 +99,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
         Log.d(TAG, "clearAdapterView: ")
         songs.clear()
         adapter.updateSongs(songs)
-//        kuwoSongAdapter.updateSongs(kuwoSongs)
     }
 
     private fun initDataAndView() {
@@ -126,15 +124,17 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
             override fun itemClickListener(song: KuwoSong) {
                 binding.searchSongsRv.isClickable = false
                 binding.loading.visibility = View.VISIBLE
+                // about play use songViewModel
                 songViewModel.addSongToPlaylist(song.convertToSong(), true)
             }
 
             override fun addSongToList(song: KuwoSong) {
+                // about play use songViewModel
                 songViewModel.addSongToPlaylist(song.convertToSong())
             }
 
             override fun favoriteClickListener(song: KuwoSong, position: Int) {
-                // TODO("Not yet implemented")
+                kuwoViewModel.operateFavorite(song, position)
             }
         })
 
@@ -160,6 +160,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
     }
 
     private val favoriteChangedSids = mutableListOf<Long>()
+//    private val fChangedKuwoRids = mutableListOf<Long>()
     private fun collectAndObserver() {
         lifecycleScope.launch {
             songViewModel.searchSongs.collect {
@@ -210,7 +211,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
                 PlayerManager.kuwoPage++
 
                 kuwoSongs.addAll(it)
-                Log.e(TAG, "collectAndObserver: kuwoSongAdapter.hasSetFavorite = ${kuwoSongAdapter.hasSetFavorite}", )
                 if (kuwoSongAdapter.hasSetFavorite) {
                     kuwoSongAdapter.updateSongs(kuwoSongs, PlayerManager.kuwoPage)
                 }
@@ -224,8 +224,19 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
             }
         }
 
+        lifecycleScope.launch {
+            kuwoViewModel.operateFavoriteSong.collect {
+                val rid = it.first
+                kuwoSongAdapter.updateFavoriteSong(rid, position = it.second, isFavorite = it.third)
+//                if (rid in favoriteChangedSids) {
+//                    fChangedKuwoRids.remove(rid)
+//                } else {
+//                    fChangedKuwoRids.add(rid)
+//                }
+            }
+        }
+
         PlayerManager.isLoadingLiveData.observe(viewLifecycleOwner) {
-            Log.e(TAG, "collectAndObserver: isLoading=$it")
             if (it.isFalse()) {
                 binding.searchSongsRv.isClickable = true
                 binding.loading.visibility = View.GONE
@@ -237,5 +248,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
         super.onStop()
         songViewModel.notifyFavoriteChanged(favoriteChangedSids.toList())
         favoriteChangedSids.clear()
+//        kuwoViewModel.notifyFavoriteChanged(fChangedKuwoRids.toList())
+//        fChangedKuwoRids.clear()
     }
 }

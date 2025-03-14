@@ -68,7 +68,6 @@ class PlayService : Service() {
     override fun onBind(intent: Intent?): IBinder {
         Log.d(TAG, "onBind: ")
         player = PlayerManager.player ?: ExoPlayer.Builder(this).build().apply {
-            Log.e(TAG, "onBind: player is null, create it")
             repeatMode = if (PlayerManager.repeatModeLiveData.value == REPEAT_MODE_SINGLE) ExoPlayer.REPEAT_MODE_ONE
             else ExoPlayer.REPEAT_MODE_ALL
             shuffleModeEnabled = PlayerManager.repeatModeLiveData.value == REPEAT_MODE_SHUFFLE
@@ -124,7 +123,6 @@ class PlayService : Service() {
 
     fun updateSongInfo() {
         tryGetBitmap {
-            Log.e(TAG, "updateSongInfo: bitmap=$it")
             if (it == null) {
                 val drawable = ContextCompat.getDrawable(appContext, R.drawable.music_background) as? VectorDrawable
                 val canvas = Canvas(bitmap)

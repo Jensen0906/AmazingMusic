@@ -88,7 +88,6 @@ object PlayerManager {
                     if (player?.currentMediaItem != funVideoMediaItem) {
                         val index = player?.currentMediaItemIndex.orInvalid()
                         curSongIndexLiveData.postValue(index)
-                        Log.e(TAG, "onMediaItemTransition: updateSongInfo, ")
                         if (index >= 0 && playlist.isNotEmpty()) {
                             coverUrl = playlist[index].coverUrl ?: ""
                         }

@@ -245,20 +245,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
     }
 
-    override fun onPause() {
-        Log.w(TAG, "onPause: ")
-        super.onPause()
-    }
-
-    override fun onStop() {
-        Log.w(TAG, "onStop: ")
-        super.onStop()
-    }
-
-    override fun onDestroy() {
-        Log.e(TAG, "onDestroy: ")
-        super.onDestroy()
-    }
     private fun onClick() {
         val drawerToggle = ActionBarDrawerToggle(
             this,

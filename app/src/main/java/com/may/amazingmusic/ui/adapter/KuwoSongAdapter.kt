@@ -1,6 +1,7 @@
 package com.may.amazingmusic.ui.adapter
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -89,6 +90,15 @@ class KuwoSongAdapter(
     fun setLoading(loading: Boolean) {
         this.isLoading = loading
         notifyItemChanged(songList.size)
+    }
+
+    fun updateFavoriteSong(rid: Long, position: Int, isFavorite: Boolean) {
+        if (position >= itemCount) return
+        val mutableListFavIds = favIds.toMutableList()
+        if (isFavorite) mutableListFavIds.add(rid)
+        else mutableListFavIds.remove(rid)
+        favIds = mutableListFavIds.toList()
+        notifyItemChanged(position)
     }
 
     private var isFavoriteAdapter = false
