@@ -27,6 +27,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.may.amazingmusic.R
@@ -54,7 +55,6 @@ import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseActivity
 import com.may.amazingmusic.utils.isFalse
 import com.may.amazingmusic.utils.isTrue
-import com.may.amazingmusic.utils.orInvalid
 import com.may.amazingmusic.utils.orZero
 import com.may.amazingmusic.utils.player.PlayerListener
 import com.may.amazingmusic.utils.player.PlayerManager
@@ -85,6 +85,35 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private lateinit var kuwoViewModel: KuwoViewModel
 
     private var hasOpenPlayer = false
+
+    private var curSongPos = 0
+    private val playerListener = object : PlayerListener {
+        override fun onIsPlayingChanged(isPlaying: Boolean, title: String?) {
+            if (isPlaying.isTrue()) ToastyUtils.success("正在播放 - $title")
+            binding.playIv.setImageResource(
+                if (isPlaying) R.drawable.icon_pause else R.drawable.icon_play
+            )
+        }
+
+        override fun onMediaItemTransition(mediaItem: MediaItem?, position: Int) {
+            if (position < 0) {
+                playlistAdapter?.setSongToPlaylist()
+                playlistDialog?.dismiss()
+            } else {
+                curSongPos = position
+                playlistAdapter?.setCurrentSongIndex(position)
+                playlistBinding.playlistRv.scrollToPosition(position)
+            }
+            val coverUrl = mediaItem?.mediaMetadata?.extras?.getString("cover_url", "")
+            Glide.with(this@MainActivity)
+                .load(coverUrl)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .error(R.drawable.amazingmusic)
+                .transform(CenterCrop(), RoundedCorners(54))
+                .into(binding.displayPlayerIv)
+            songViewModel.currentSongPic.postValue(coverUrl)
+        }
+    }
 
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -187,6 +216,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         playlistBinding.playlistRv.layoutManager = LinearLayoutManager(this)
 
         binding.playIv.setImageResource(if (PlayerManager.player?.isPlaying.isTrue()) R.drawable.icon_pause else R.drawable.icon_play)
+
+        PlayerManager.playerListeners.add(playerListener)
     }
 
     private fun initDataAndObserver() {
@@ -208,20 +239,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             PlayerManager.repeatModeLiveData.postValue(DataStoreManager.repeatModeFlow.first().orZero())
         }
 
-        PlayerManager.curSongIndexLiveData.observe(this) {
-            if (it < 0) {
-                playlistAdapter?.setSongToPlaylist()
-                playlistDialog?.dismiss()
-            } else {
-                playlistAdapter?.setCurrentSongIndex(it)
-                playlistBinding.playlistRv.scrollToPosition(it)
-            }
-
-            if (it >= 0 && PlayerManager.playlist.isNotEmpty()) {
-                songViewModel.currentSongPic.postValue(PlayerManager.coverUrl)
-            }
-        }
-
         PlayerManager.repeatModeLiveData.observe(this) {
             lifecycleScope.launch { DataStoreManager.saveRepeatMode(it) }
             if (it < ExoPlayer.REPEAT_MODE_OFF) {
@@ -236,13 +253,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }
         }
 
-        songViewModel.currentSongPic.observe(this) {
-            Glide.with(this)
-                .load(PlayerManager.coverUrl)
-                .placeholder(R.drawable.amazingmusic).error(R.drawable.amazingmusic)
-                .transform(CenterCrop(), RoundedCorners(54))
-                .into(binding.displayPlayerIv)
-        }
     }
 
     private fun onClick() {
@@ -331,18 +341,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             PlayerManager.playFunVideo()
             return@setOnLongClickListener true
         }
-        PlayerManager.playerListeners.add(object : PlayerListener {
-            override fun onIsPlayingChanged(isPlaying: Boolean, title: String?) {
-                if (isPlaying.isTrue()) ToastyUtils.success("正在播放 - $title")
-                binding.playIv.setImageResource(
-                    if (isPlaying) R.drawable.icon_pause else R.drawable.icon_play
-                )
-            }
-
-            override fun onMediaItemTransition(mediaItem: MediaItem?) {
-                // nothing to do
-            }
-        })
     }
 
     private var playlistDialog: Dialog? = null
@@ -410,11 +408,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 playlistDialog?.dismiss()
             }
         }
-        Log.d(TAG, "displayPlaylist: currentSongIndex=${PlayerManager.curSongIndexLiveData.value}")
+
         playlistBinding.clearListLayout.visibility = if (PlayerManager.playlist.isEmpty()) View.GONE else View.VISIBLE
         playlistBinding.playModeLayout.visibility = playlistBinding.clearListLayout.visibility
-        playlistAdapter?.setCurrentSongIndex(PlayerManager.curSongIndexLiveData.value.orInvalid())
-        playlistBinding.playlistRv.scrollToPosition(PlayerManager.curSongIndexLiveData.value.orZero())
+        playlistAdapter?.setCurrentSongIndex(curSongPos.orZero())
+        playlistBinding.playlistRv.scrollToPosition(curSongPos.orZero())
         playlistDialog?.show()
     }
 
@@ -433,6 +431,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         Log.d(TAG, "justPlayFirstSong: song=${song.title}")
         PlayerManager.clearPlaylist()
         val intent = Intent(this, PlayService::class.java)
+        intent.putExtra("cover_url", song.coverUrl)
 
         if (isPlayServiceBinding.isTrue() && PlayerManager.player == null) unbindService(serviceConnection)
 
@@ -460,6 +459,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                         .setMediaMetadata(
                             MediaMetadata.Builder()
                                 .setTitle(song.title).setArtist(song.singer)
+                                .setExtras(Bundle().apply { putString("cover_url", song.coverUrl) })
                                 .build()
                         )
                         .build()
@@ -494,6 +494,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                             .setMediaMetadata(
                                 MediaMetadata.Builder()
                                     .setTitle(song.title).setArtist(song.singer)
+                                    .setExtras(Bundle().apply { putString("cover_url", song.coverUrl) })
                                     .build()
                             )
                             .build()
@@ -575,6 +576,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
         binding.notifyIv.visibility = if (currentFragment == mineFragment) View.VISIBLE else View.GONE
         binding.playAllBtn.visibility = if (currentFragment == favoriteFragment) View.VISIBLE else View.GONE
+    }
+
+    override fun onDestroy() {
+        PlayerManager.playerListeners.remove(playerListener)
+        super.onDestroy()
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {

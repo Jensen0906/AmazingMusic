@@ -10,5 +10,5 @@ import androidx.media3.common.MediaItem
  */
 interface PlayerListener {
     fun onIsPlayingChanged(isPlaying: Boolean, title: String?)
-    fun onMediaItemTransition(mediaItem: MediaItem?)
+    fun onMediaItemTransition(mediaItem: MediaItem?, position: Int)
 }

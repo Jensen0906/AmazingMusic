@@ -45,7 +45,6 @@ object PlayerManager {
     var playingSongUrl: String? = null
     var page = 1
     var kuwoPage = 1
-    val curSongIndexLiveData = MutableLiveData(-1)
     val repeatModeLiveData = MutableLiveData(ExoPlayer.REPEAT_MODE_OFF)
     val isLoadingLiveData = MutableLiveData(false)
 
@@ -53,7 +52,6 @@ object PlayerManager {
     var stopUntilThisOver = false
     val disableTimer = MutableLiveData(false)
 
-    var coverUrl = ""
     var isKuwoSource = false
 
     fun setPlayerListener() {
@@ -84,17 +82,12 @@ object PlayerManager {
                     player?.playWhenReady = true
                     playingSongUrl = player?.currentMediaItem?.localConfiguration?.uri?.toString()
                     if (player?.currentMediaItem != funVideoMediaItem) {
-                        val index = player?.currentMediaItemIndex.orInvalid()
-                        curSongIndexLiveData.postValue(index)
-                        if (index >= 0 && playlist.isNotEmpty()) {
-                            coverUrl = playlist[index].coverUrl ?: ""
+                        val position = player?.currentMediaItemIndex.orInvalid()
+                        playerListeners.forEach {
+                            it?.onMediaItemTransition(mediaItem, position)
                         }
                     }
-                    playerListeners.forEach {
-                        it?.onMediaItemTransition(mediaItem)
-                    }
                 }
-//                super.onMediaItemTransition(mediaItem, reason)
             }
 
             override fun onPlayerError(error: PlaybackException) {
@@ -187,8 +180,9 @@ object PlayerManager {
     fun clearPlaylist() {
         player?.clearMediaItems()
         playlist.clear()
-        curSongIndexLiveData.postValue(-1)
-        coverUrl = ""
+        playerListeners.forEach {
+            it?.onMediaItemTransition(null, -1)
+        }
         disableTimer.postValue(false)
     }
 

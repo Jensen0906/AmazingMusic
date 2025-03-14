@@ -28,6 +28,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.PlayerNotificationManager
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.may.amazingmusic.App.Companion.appContext
@@ -67,6 +68,17 @@ class PlayService : Service() {
 
     private var bitmap = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888)
 
+    private val playerListener = object : PlayerListener {
+        override fun onIsPlayingChanged(isPlaying: Boolean, title: String?) {
+            // nothing to do
+        }
+
+        override fun onMediaItemTransition(mediaItem: MediaItem?, position: Int) {
+            updateSongInfo(mediaItem?.mediaMetadata?.extras?.getString("cover_url", ""))
+        }
+
+    }
+
     override fun onBind(intent: Intent?): IBinder {
         Log.d(TAG, "onBind: ")
         player = PlayerManager.player ?: ExoPlayer.Builder(this).build().apply {
@@ -104,28 +116,18 @@ class PlayService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        updateSongInfo()
-
+        updateSongInfo(intent?.getStringExtra("cover_url"))
+        setPlayerNotification()
         startForeground(notificationId, NotificationCompat.Builder(this, channelId).build())
-
         registerHeadphone()
-
-        PlayerManager.playerListeners.add(object : PlayerListener {
-            override fun onIsPlayingChanged(isPlaying: Boolean, title: String?) {
-                // nothing to do
-            }
-
-            override fun onMediaItemTransition(mediaItem: MediaItem?) {
-                updateSongInfo()
-            }
-
-        })
+        PlayerManager.playerListeners.add(playerListener)
         return binder
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
         Log.d(TAG, "onUnbind: ")
         PlayerManager.release()
+        PlayerManager.playerListeners.remove(playerListener)
         if (!bitmap.isRecycled) {
             bitmap.recycle()
         }
@@ -134,8 +136,8 @@ class PlayService : Service() {
         return super.onUnbind(intent)
     }
 
-    private fun updateSongInfo() {
-        tryGetBitmap {
+    private fun updateSongInfo(coverUrl: String?) {
+        tryGetBitmap(coverUrl) {
             if (it == null) {
                 val drawable = ContextCompat.getDrawable(appContext, R.drawable.music_background) as? VectorDrawable
                 val canvas = Canvas(bitmap)
@@ -145,7 +147,6 @@ class PlayService : Service() {
                 bitmap = it
             }
         }
-        setPlayerNotification()
     }
 
     private fun registerHeadphone() {
@@ -199,23 +200,23 @@ class PlayService : Service() {
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.IO)
-    private fun tryGetBitmap(callback: (Bitmap?) -> Unit) {
+    private fun tryGetBitmap(coverUrl: String?, callback: (Bitmap?) -> Unit) {
         serviceScope.launch {
             if (DataStoreManager.isKuwoSelected.first().isTrue()) {
+                Glide.with(this@PlayService).asBitmap().load(coverUrl).diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(object : CustomTarget<Bitmap>() {
+                        override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                            callback(resource)
+                        }
 
-                Glide.with(this@PlayService).asBitmap().load(PlayerManager.coverUrl).into(object : CustomTarget<Bitmap>() {
-                    override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                        callback(resource)
-                    }
-
-                    override fun onLoadCleared(placeholder: Drawable?) {
-                    }
-                })
+                        override fun onLoadCleared(placeholder: Drawable?) {
+                        }
+                    })
             }
         }
     }
 
     inner class MyBinder : Binder() {
-        fun getService() : PlayService = this@PlayService
+        fun getService(): PlayService = this@PlayService
     }
 }
