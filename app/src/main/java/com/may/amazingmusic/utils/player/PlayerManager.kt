@@ -21,7 +21,6 @@ import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_LOOP
 import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SHUFFLE
 import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SINGLE
 import com.may.amazingmusic.constant.NetWorkConst.FUN_VIDEO_URL
-import com.may.amazingmusic.service.PlayService
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.moreThanOne
@@ -42,7 +41,7 @@ object PlayerManager {
     private val TAG = this.javaClass.simpleName
 
     var player: ExoPlayer? = null
-    var playerListener: PlayerListener? = null
+    val playerListeners: MutableList<PlayerListener?> = mutableListOf()
     var playingSongUrl: String? = null
     var page = 1
     var kuwoPage = 1
@@ -61,10 +60,9 @@ object PlayerManager {
         player?.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 if (player?.currentMediaItem != funVideoMediaItem && playlist.isNotEmpty()) {
-                    playerListener?.onIsPlayingChanged(
-                        isPlaying,
-                        playlist[player?.currentMediaItemIndex.orZero()].title
-                    )
+                    playerListeners.forEach {
+                        it?.onIsPlayingChanged(isPlaying, playlist[player?.currentMediaItemIndex.orZero()].title)
+                    }
                 }
                 super.onIsPlayingChanged(isPlaying)
             }
@@ -91,10 +89,12 @@ object PlayerManager {
                         if (index >= 0 && playlist.isNotEmpty()) {
                             coverUrl = playlist[index].coverUrl ?: ""
                         }
-                        playService?.updateSongInfo()
+                    }
+                    playerListeners.forEach {
+                        it?.onMediaItemTransition(mediaItem)
                     }
                 }
-                super.onMediaItemTransition(mediaItem, reason)
+//                super.onMediaItemTransition(mediaItem, reason)
             }
 
             override fun onPlayerError(error: PlaybackException) {
@@ -190,12 +190,6 @@ object PlayerManager {
         curSongIndexLiveData.postValue(-1)
         coverUrl = ""
         disableTimer.postValue(false)
-        playService?.updateSongInfo()
-    }
-
-    private var playService: PlayService? = null
-    fun setService(playService: PlayService?) {
-        this.playService = playService
     }
 
     private var simpleCache: SimpleCache? = null

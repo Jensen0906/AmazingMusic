@@ -80,11 +80,11 @@ class FavoriteFragment : BaseFragment<FragmentFavoriteBinding>() {
 
         kuwoSongAdapter = KuwoSongAdapter(kuwoSongs, object : KuwoSongClickListener {
             override fun itemClickListener(song: KuwoSong) {
-                // TODO("Not yet implemented")
+                songViewModel.addSongToPlaylist(song.convertToSong(), true)
             }
 
             override fun addSongToList(song: KuwoSong) {
-                // TODO("Not yet implemented")
+                songViewModel.addSongToPlaylist(song.convertToSong())
             }
 
             override fun favoriteClickListener(song: KuwoSong, position: Int) {

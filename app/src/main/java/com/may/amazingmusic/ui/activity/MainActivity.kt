@@ -331,14 +331,18 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             PlayerManager.playFunVideo()
             return@setOnLongClickListener true
         }
-        PlayerManager.playerListener = object : PlayerListener {
+        PlayerManager.playerListeners.add(object : PlayerListener {
             override fun onIsPlayingChanged(isPlaying: Boolean, title: String?) {
                 if (isPlaying.isTrue()) ToastyUtils.success("正在播放 - $title")
                 binding.playIv.setImageResource(
                     if (isPlaying) R.drawable.icon_pause else R.drawable.icon_play
                 )
             }
-        }
+
+            override fun onMediaItemTransition(mediaItem: MediaItem?) {
+                // nothing to do
+            }
+        })
     }
 
     private var playlistDialog: Dialog? = null
@@ -418,12 +422,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             isPlayServiceBinding = true
-            PlayerManager.setService((service as PlayService.MyBinder).getService())
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             isPlayServiceBinding = false
-            PlayerManager.setService(null)
         }
     }
 

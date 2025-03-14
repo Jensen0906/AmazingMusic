@@ -21,6 +21,7 @@ import android.util.Log
 import android.view.KeyEvent
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -38,6 +39,7 @@ import com.may.amazingmusic.receiver.HeadphoneReceiver
 import com.may.amazingmusic.ui.activity.MainActivity
 import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.isTrue
+import com.may.amazingmusic.utils.player.PlayerListener
 import com.may.amazingmusic.utils.player.PlayerManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -107,6 +109,17 @@ class PlayService : Service() {
         startForeground(notificationId, NotificationCompat.Builder(this, channelId).build())
 
         registerHeadphone()
+
+        PlayerManager.playerListeners.add(object : PlayerListener {
+            override fun onIsPlayingChanged(isPlaying: Boolean, title: String?) {
+                // nothing to do
+            }
+
+            override fun onMediaItemTransition(mediaItem: MediaItem?) {
+                updateSongInfo()
+            }
+
+        })
         return binder
     }
 
@@ -121,7 +134,7 @@ class PlayService : Service() {
         return super.onUnbind(intent)
     }
 
-    fun updateSongInfo() {
+    private fun updateSongInfo() {
         tryGetBitmap {
             if (it == null) {
                 val drawable = ContextCompat.getDrawable(appContext, R.drawable.music_background) as? VectorDrawable
