@@ -70,7 +70,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
                 binding.loading.visibility = View.INVISIBLE
                 binding.songsRv.visibility = View.INVISIBLE
                 binding.kuwoTips.visibility = View.VISIBLE
+                binding.banner.visibility = View.VISIBLE
             } else {
+                binding.banner.visibility = View.INVISIBLE
                 binding.kuwoTips.visibility = View.INVISIBLE
                 binding.songsRv.visibility = View.VISIBLE
             }

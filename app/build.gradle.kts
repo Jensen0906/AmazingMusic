@@ -77,4 +77,6 @@ dependencies {
     implementation(libs.toasty)
     // lrc display
     implementation(libs.lyricViewX)
+    // banner
+    implementation("io.github.youth5201314:banner:2.2.3")
 }
