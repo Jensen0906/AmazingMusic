@@ -89,6 +89,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private lateinit var kuwoViewModel: KuwoViewModel
 
     private var hasOpenPlayer = false
+    var songListFragmentAlive = false
 
     private var curSongPos = 0
     private var showToast = false
@@ -552,18 +553,21 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 if (fragment is HomeFragment || fragment is SongListFragment) {
                     transaction.setCustomAnimations(R.anim.fragment_hold_on, R.anim.fragment_play_exit)
                         .hide(currentFragment).show(fragment).commit()
-                    supportFragmentManager.beginTransaction().remove(currentFragment).commit()
                 } else {
                     transaction.setCustomAnimations(R.anim.fragment_hold_on, R.anim.fragment_play_exit)
                         .hide(currentFragment).add(R.id.fg_view, fragment).show(fragment).commit()
-                    supportFragmentManager.beginTransaction().remove(currentFragment).commit()
                 }
+                supportFragmentManager.beginTransaction().remove(currentFragment).commit()
             }
 
             else -> {
-                if (fragment is HomeFragment) {
+                if (fragment is SongListFragment && currentFragment is HomeFragment && songListFragmentAlive) {
+                    transaction.hide(currentFragment).show(fragment).commit()
+                    fragment.onResume()
+                } else if (fragment is HomeFragment) {
                     transaction.hide(currentFragment).show(fragment).commit()
                     supportFragmentManager.beginTransaction().remove(currentFragment).commit()
+                    lastFragment = homeFragment
                 } else if (currentFragment !is HomeFragment && currentFragment !is SongListFragment) {
                     transaction.remove(currentFragment).add(R.id.fg_view, fragment).show(fragment).commit()
                 } else {

@@ -4,11 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.may.amazingmusic.bean.KuwoSong
 import com.may.amazingmusic.databinding.FragmentSongListBinding
+import com.may.amazingmusic.ui.activity.MainActivity
 import com.may.amazingmusic.ui.adapter.KuwoSongAdapter
 import com.may.amazingmusic.ui.adapter.KuwoSongClickListener
 import com.may.amazingmusic.utils.ToastyUtils
@@ -22,6 +25,7 @@ import kotlinx.coroutines.launch
  * @Author Jensen
  * @Date 2025/3/16 13:53
  */
+@OptIn(UnstableApi::class)
 class SongListFragment : BaseFragment<FragmentSongListBinding>() {
     private val TAG = this.javaClass.simpleName
 
@@ -36,15 +40,13 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        collectsAndObserves()
-    }
-
     override fun onResume() {
+        kuwoSongAdapter.updateSongs(emptyList())
         super.onResume()
+        collectsAndObserves()
         kuwoViewModel.getSongListInfo()
         binding.loadingBar.visibility = View.VISIBLE
+        (requireActivity() as MainActivity).songListFragmentAlive = true
     }
 
     private fun initData() {
@@ -82,6 +84,10 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        (requireActivity() as MainActivity).songListFragmentAlive = false
+    }
     override fun setDataBinding(): FragmentSongListBinding {
         return FragmentSongListBinding.inflate(layoutInflater)
     }
