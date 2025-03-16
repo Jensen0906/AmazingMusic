@@ -5,7 +5,12 @@ import android.text.method.PasswordTransformationMethod
 import android.view.View
 import android.widget.ImageView
 import androidx.core.widget.addTextChangedListener
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.textfield.TextInputEditText
+import com.may.amazingmusic.R
 
 /**
  * @Author May
@@ -55,3 +60,8 @@ fun ImageView.changePassShow(password: TextInputEditText, needShow: Boolean) {
         }
     }
 }
+
+fun globalGlideOptions(radius: Int) = RequestOptions()
+    .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+    .error(R.drawable.amazingmusic)
+    .transform(CenterCrop(), RoundedCorners(radius))

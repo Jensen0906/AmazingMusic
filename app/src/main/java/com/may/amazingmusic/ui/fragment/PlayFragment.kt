@@ -45,9 +45,8 @@ class PlayFragment : BaseFragment<FragmentPlayBinding>() {
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, position: Int) {
-            //
+            updateCoverPicture()
         }
-
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -94,9 +93,6 @@ class PlayFragment : BaseFragment<FragmentPlayBinding>() {
     }
 
     private fun observe() {
-        songViewModel.currentSongPic.observe(viewLifecycleOwner) {
-            setCoverPic(it)
-        }
         kuwoViewModel.currentLrc.observe(viewLifecycleOwner) {
             binding.lrcView.loadLyric(it)
         }
@@ -128,7 +124,7 @@ class PlayFragment : BaseFragment<FragmentPlayBinding>() {
             binding.playerView.visibility = View.INVISIBLE
             binding.songCover.visibility = View.VISIBLE
             binding.switchGroup.visibility = View.VISIBLE
-            setCoverPic(songViewModel.currentSongPic.value)
+            updateCoverPicture()
         } else {
             binding.playerView.player = PlayerManager.player
             binding.songCover.visibility = View.INVISIBLE
@@ -151,10 +147,10 @@ class PlayFragment : BaseFragment<FragmentPlayBinding>() {
         })
     }
 
-    private fun setCoverPic(coverUrl: String?) {
+    private fun updateCoverPicture() {
         Glide.with(this)
-            .load(coverUrl)
-            .diskCacheStrategy(DiskCacheStrategy.ALL)
+            .load(PlayerManager.player?.mediaMetadata?.artworkData)
+            .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
             .error(R.drawable.amazingmusic)
             .into(binding.songCover)
     }

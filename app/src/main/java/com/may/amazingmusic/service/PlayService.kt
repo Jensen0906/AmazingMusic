@@ -9,47 +9,23 @@ import android.app.Service
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.drawable.Drawable
-import android.graphics.drawable.VectorDrawable
 import android.media.AudioManager
-import android.net.Uri
-import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.view.KeyEvent
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
-import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
-import androidx.media3.common.util.BitmapLoader
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
+import androidx.media3.ui.DefaultMediaDescriptionAdapter
 import androidx.media3.ui.PlayerNotificationManager
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
-import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.SettableFuture
-import com.may.amazingmusic.App.Companion.appContext
-import com.may.amazingmusic.R
 import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SHUFFLE
 import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SINGLE
 import com.may.amazingmusic.constant.IntentConst.PENDING_INTENT_ACTION
 import com.may.amazingmusic.receiver.HeadphoneReceiver
 import com.may.amazingmusic.ui.activity.MainActivity
-import com.may.amazingmusic.utils.DataStoreManager
-import com.may.amazingmusic.utils.isTrue
-import com.may.amazingmusic.utils.player.PlayerListener
 import com.may.amazingmusic.utils.player.PlayerManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 
 
 /**
@@ -68,22 +44,10 @@ class PlayService : Service() {
     private val notificationId = 1
     private val headphoneReceiver = HeadphoneReceiver()
     private lateinit var mediaSession: MediaSession
-    private val binder = MyBinder()
 
     private var bitmap = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888)
 
-    private val playerListener = object : PlayerListener {
-        override fun onIsPlayingChanged(isPlaying: Boolean, title: String?) {
-            // nothing to do
-        }
-
-        override fun onMediaItemTransition(mediaItem: MediaItem?, position: Int) {
-            updateSongInfo(mediaItem?.mediaMetadata?.extras?.getString("cover_url", ""))
-        }
-
-    }
-
-    override fun onBind(intent: Intent?): IBinder {
+    override fun onBind(intent: Intent?): IBinder? {
         Log.d(TAG, "onBind: ")
         player = PlayerManager.player ?: ExoPlayer.Builder(this).build().apply {
             repeatMode = if (PlayerManager.repeatModeLiveData.value == REPEAT_MODE_SINGLE) ExoPlayer.REPEAT_MODE_ONE
@@ -120,37 +84,21 @@ class PlayService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        updateSongInfo(intent?.getStringExtra("cover_url"))
         setPlayerNotification()
         startForeground(notificationId, NotificationCompat.Builder(this, channelId).build())
         registerHeadphone()
-        PlayerManager.playerListeners.add(playerListener)
-        return binder
+        return null
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
         Log.d(TAG, "onUnbind: ")
         PlayerManager.release()
-        PlayerManager.playerListeners.remove(playerListener)
         if (!bitmap.isRecycled) {
             bitmap.recycle()
         }
         unRegisterHeadphone()
         mediaSession.release()
         return super.onUnbind(intent)
-    }
-
-    private fun updateSongInfo(coverUrl: String?) {
-        tryGetBitmap(coverUrl) {
-            if (it == null) {
-                val drawable = ContextCompat.getDrawable(appContext, R.drawable.music_background) as? VectorDrawable
-                val canvas = Canvas(bitmap)
-                drawable?.setBounds(0, 0, canvas.width, canvas.height)
-                drawable?.draw(canvas)
-            } else {
-                bitmap = it
-            }
-        }
     }
 
     private fun registerHeadphone() {
@@ -175,77 +123,11 @@ class PlayService : Service() {
         )
         playerNotificationManager = PlayerNotificationManager.Builder(
             this, notificationId, channelId
-        ).setMediaDescriptionAdapter(object : PlayerNotificationManager.MediaDescriptionAdapter {
-            override fun getCurrentContentTitle(player: Player): CharSequence {
-                return player.mediaMetadata.title ?: ""
-            }
-
-            override fun createCurrentContentIntent(player: Player): PendingIntent? {
-                return pendingIntent
-            }
-
-            override fun getCurrentContentText(player: Player): CharSequence? {
-                return player.mediaMetadata.artist
-            }
-
-            override fun getCurrentLargeIcon(
-                player: Player,
-                callback: PlayerNotificationManager.BitmapCallback
-            ): Bitmap? {
-                val artByteArray = player.mediaMetadata.artworkData ?: return bitmap
-                return artByteArray.size.let { BitmapFactory.decodeByteArray(artByteArray, 0, it) }
-            }
-        }).build().apply {
+        ).setMediaDescriptionAdapter(DefaultMediaDescriptionAdapter(pendingIntent)).build().apply {
             setPlayer(player)
             setUseRewindAction(false)
             setUseFastForwardAction(false)
             setMediaSessionToken(mediaSession.platformToken)
         }
-    }
-
-    private val serviceScope = CoroutineScope(Dispatchers.IO)
-    private fun tryGetBitmap(coverUrl: String?, callback: (Bitmap?) -> Unit) {
-        serviceScope.launch {
-            if (DataStoreManager.isKuwoSelected.first().isTrue()) {
-                Glide.with(this@PlayService).asBitmap().load(coverUrl).diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(object : CustomTarget<Bitmap>() {
-                        override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                            callback(resource)
-                        }
-
-                        override fun onLoadCleared(placeholder: Drawable?) {
-                        }
-                    })
-            }
-        }
-    }
-
-    private val bitmapLoader = object : BitmapLoader {
-        val future = SettableFuture.create<Bitmap>()
-        override fun supportsMimeType(mimeType: String): Boolean {
-            return true
-        }
-
-        override fun decodeBitmap(data: ByteArray): ListenableFuture<Bitmap> {
-            return future
-        }
-
-        override fun loadBitmap(uri: Uri): ListenableFuture<Bitmap> {
-            Glide.with(appContext).asBitmap().load(uri).into(object : CustomTarget<Bitmap>() {
-                override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                    future.set(resource)
-                }
-
-                override fun onLoadCleared(placeholder: Drawable?) {
-
-                }
-            })
-            return future
-        }
-
-    }
-
-    inner class MyBinder : Binder() {
-        fun getService(): PlayService = this@PlayService
     }
 }

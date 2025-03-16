@@ -57,12 +57,12 @@ object PlayerManager {
     fun setPlayerListener() {
         player?.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
+                super.onIsPlayingChanged(isPlaying)
                 if (player?.currentMediaItem != funVideoMediaItem && playlist.isNotEmpty()) {
                     playerListeners.forEach {
                         it?.onIsPlayingChanged(isPlaying, playlist[player?.currentMediaItemIndex.orZero()].title)
                     }
                 }
-                super.onIsPlayingChanged(isPlaying)
             }
 
             override fun onIsLoadingChanged(isLoading: Boolean) {

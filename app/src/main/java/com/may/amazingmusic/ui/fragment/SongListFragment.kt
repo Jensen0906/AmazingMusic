@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
  * @Author Jensen
  * @Date 2025/3/16 13:53
  */
-class SongListFragment: BaseFragment<FragmentSongListBinding>() {
+class SongListFragment : BaseFragment<FragmentSongListBinding>() {
     private val TAG = this.javaClass.simpleName
 
     private lateinit var songViewModel: SongViewModel

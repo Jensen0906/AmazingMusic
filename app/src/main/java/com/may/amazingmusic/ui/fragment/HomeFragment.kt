@@ -245,7 +245,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
 
         lifecycleScope.launch {
             kuwoViewModel.banners.collect {
-                Log.e(TAG, "collectAndObserver: banners: $it")
                 banners.clear()
                 banners.addAll(it ?: emptyList())
                 bannerAdapter = MyBannerAdapter(banners, myBannerClickListener)

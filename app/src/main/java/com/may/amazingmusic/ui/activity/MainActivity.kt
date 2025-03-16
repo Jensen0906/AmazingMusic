@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
@@ -27,9 +28,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.load.resource.bitmap.CenterCrop
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.may.amazingmusic.R
 import com.may.amazingmusic.bean.Song
 import com.may.amazingmusic.constant.BaseWorkConst.ADD_LIST_AND_PLAY
@@ -54,6 +52,7 @@ import com.may.amazingmusic.ui.fragment.SongListFragment
 import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseActivity
+import com.may.amazingmusic.utils.globalGlideOptions
 import com.may.amazingmusic.utils.isFalse
 import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.orZero
@@ -61,8 +60,11 @@ import com.may.amazingmusic.utils.player.PlayerListener
 import com.may.amazingmusic.utils.player.PlayerManager
 import com.may.amazingmusic.viewmodel.KuwoViewModel
 import com.may.amazingmusic.viewmodel.SongViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 
 /**
  * @Author May
@@ -94,6 +96,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         override fun onIsPlayingChanged(isPlaying: Boolean, title: String?) {
             if (isPlaying && showToast) {
                 ToastyUtils.success("正在播放 - $title")
+                Glide.with(this@MainActivity).load(PlayerManager.player?.mediaMetadata?.artworkData)
+                    .apply(globalGlideOptions(50)).into(binding.displayPlayerIv)
                 showToast = false
             }
             binding.playIv.setImageResource(
@@ -113,26 +117,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }
 
             if (PlayerManager.isKuwoSource) {
-                val coverUrl = mediaItem?.mediaMetadata?.extras?.getString("cover_url", "")
-                Glide.with(this@MainActivity)
-                    .load(coverUrl)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .error(R.drawable.amazingmusic)
-                    .transform(CenterCrop(), RoundedCorners(50))
-                    .into(binding.displayPlayerIv)
-                songViewModel.currentSongPic.postValue(coverUrl)
                 if (position >= 0 && position < PlayerManager.playlist.size) {
                     kuwoViewModel.getKuwoLrc(PlayerManager.playlist[position].sid)
                 }
-            } else {
-                val coverData = mediaItem?.mediaMetadata?.artworkUri
-                Log.e(TAG, "onMediaItemTransition: cover=$coverData")
-                Glide.with(this@MainActivity)
-                    .load(coverData)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .error(R.drawable.amazingmusic)
-                    .transform(CenterCrop(), RoundedCorners(50))
-                    .into(binding.displayPlayerIv)
             }
         }
     }
@@ -279,7 +266,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
         kuwoViewModel.songListId.observe(this) {
             if (currentFragment is HomeFragment && it >= 0)
-            switchFragment(songListFragment)
+                switchFragment(songListFragment)
         }
     }
 
@@ -330,7 +317,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             songViewModel.addAllSongsToPlaylist()
         }
         binding.displayPlayerIv.setOnClickListener {
-            switchFragment(if (currentFragment == playFragment) lastFragment else playFragment)
+            switchFragment(if (currentFragment is PlayFragment) lastFragment else playFragment)
             if (hasOpenPlayer.isFalse()) {
                 hasOpenPlayer = true
             }
@@ -455,11 +442,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
     }
 
-    private fun justPlayFirstSong(song: Song) {
+    private suspend fun justPlayFirstSong(song: Song) {
         Log.d(TAG, "justPlayFirstSong: song=${song.title}")
         PlayerManager.clearPlaylist()
         val intent = Intent(this, PlayService::class.java)
-        intent.putExtra("cover_url", song.coverUrl)
 
         if (isPlayServiceBinding.isTrue() && PlayerManager.player == null) unbindService(serviceConnection)
 
@@ -487,10 +473,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                         .setMediaMetadata(
                             MediaMetadata.Builder()
                                 .setTitle(song.title).setArtist(song.singer)
-                                .setExtras(Bundle().apply { putString("cover_url", song.coverUrl) })
+                                .setArtworkData(loadImageToByteArray(song.coverUrl), MediaMetadata.PICTURE_TYPE_FRONT_COVER)
                                 .build()
-                        )
-                        .build()
+                        ).build()
                 } else MediaItem.fromUri(it)
             }?.let {
                 PlayerManager.playlist.add(song)
@@ -506,7 +491,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
     }
 
-    private fun addSongToPlaylist(song: Song, playNow: Boolean = false, addToLast: Boolean = false) {
+    private suspend fun addSongToPlaylist(song: Song, playNow: Boolean = false, addToLast: Boolean = false) {
         Log.d(TAG, "addSongToPlaylist: song=${song.title}, is first?=${PlayerManager.playlist.isEmpty()}")
         if (PlayerManager.playlist.isEmpty()) {
             justPlayFirstSong(song)
@@ -522,7 +507,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                             .setMediaMetadata(
                                 MediaMetadata.Builder()
                                     .setTitle(song.title).setArtist(song.singer)
-                                    .setExtras(Bundle().apply { putString("cover_url", song.coverUrl) })
+                                    .setArtworkData(loadImageToByteArray(song.coverUrl), MediaMetadata.PICTURE_TYPE_FRONT_COVER)
                                     .build()
                             )
                             .build()
@@ -546,6 +531,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         if (currentFragment == fragment) return
 
         val transaction = supportFragmentManager.beginTransaction()
+        // Set anim
         when (fragment) {
             playFragment -> {
                 transaction.setCustomAnimations(R.anim.fragment_play_enter, R.anim.fragment_hold_on)
@@ -560,9 +546,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 transaction.setCustomAnimations(R.anim.fragment_right_enter, R.anim.fragment_hold_on)
             }
         }
+
         when (currentFragment) {
             playFragment -> {
-                if (fragment == homeFragment) {
+                if (fragment is HomeFragment || fragment is SongListFragment) {
                     transaction.setCustomAnimations(R.anim.fragment_hold_on, R.anim.fragment_play_exit)
                         .hide(currentFragment).show(fragment).commit()
                     supportFragmentManager.beginTransaction().remove(currentFragment).commit()
@@ -574,10 +561,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }
 
             else -> {
-                if (fragment == homeFragment) {
+                if (fragment is HomeFragment) {
                     transaction.hide(currentFragment).show(fragment).commit()
                     supportFragmentManager.beginTransaction().remove(currentFragment).commit()
-                } else if (currentFragment != homeFragment) {
+                } else if (currentFragment !is HomeFragment && currentFragment !is SongListFragment) {
                     transaction.remove(currentFragment).add(R.id.fg_view, fragment).show(fragment).commit()
                 } else {
                     transaction.hide(currentFragment).add(R.id.fg_view, fragment).show(fragment).commit()
@@ -585,17 +572,33 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }
         }
 
-        if (currentFragment == searchFragment) {
+        if (currentFragment is SearchFragment) {
             searchFragment.clearAdapterView()
         }
 
         currentFragment = fragment
 
         binding.searchIv.visibility =
-            if (currentFragment == homeFragment) View.VISIBLE else View.GONE
+            if (currentFragment is HomeFragment) View.VISIBLE else View.GONE
 
-        binding.notifyIv.visibility = if (currentFragment == mineFragment) View.VISIBLE else View.GONE
-        binding.playAllBtn.visibility = if (currentFragment == favoriteFragment) View.VISIBLE else View.GONE
+        binding.notifyIv.visibility = if (currentFragment is MineFragment) View.VISIBLE else View.GONE
+        binding.playAllBtn.visibility = if (currentFragment is FavoriteFragment) View.VISIBLE else View.GONE
+    }
+
+    private suspend fun loadImageToByteArray(coverUrl: String?): ByteArray? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val bitmap = Glide.with(this@MainActivity).asBitmap()
+                    .load(coverUrl).submit().get()
+                val outputStream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                outputStream.toByteArray()
+            } catch (it: Exception) {
+                it.printStackTrace()
+                null
+            }
+        }
+
     }
 
     override fun onDestroy() {
@@ -606,7 +609,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
         when (keyCode) {
             KeyEvent.KEYCODE_BACK -> {
-                if (currentFragment != homeFragment) {
+                if (currentFragment is PlayFragment) {
+                    switchFragment(lastFragment)
+                } else if (currentFragment != homeFragment) {
                     switchFragment(homeFragment)
                 } else {
                     Log.d(TAG, "onKeyUp: go home")

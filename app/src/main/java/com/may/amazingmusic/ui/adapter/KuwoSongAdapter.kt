@@ -1,20 +1,17 @@
 package com.may.amazingmusic.ui.adapter
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.load.resource.bitmap.CenterCrop
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.may.amazingmusic.App.Companion.appContext
 import com.may.amazingmusic.R
 import com.may.amazingmusic.bean.KuwoSong
 import com.may.amazingmusic.databinding.ItemKuwoSongBinding
 import com.may.amazingmusic.databinding.ItemSearchFooterBinding
+import com.may.amazingmusic.utils.globalGlideOptions
 
 /**
  * @Author Jensen
@@ -57,9 +54,7 @@ class KuwoSongAdapter(
             holder.itemKuwoSongBinding.song = song
             Glide.with(appContext)
                 .load(song.pic)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .placeholder(R.drawable.amazingmusic).error(R.drawable.amazingmusic)
-                .transform(CenterCrop(), RoundedCorners(30))
+                .apply(globalGlideOptions(30))
                 .into(holder.itemKuwoSongBinding.songImg)
             holder.itemKuwoSongBinding.addToPlaylist.setOnClickListener { clickListener.addSongToList(song) }
             holder.itemKuwoSongBinding.favoriteIv.setOnClickListener { clickListener.favoriteClickListener(song, position) }
@@ -95,7 +90,6 @@ class KuwoSongAdapter(
     }
 
     fun updateFavoriteSong(rid: Long, position: Int, isFavorite: Boolean) {
-        Log.e(TAG, "updateFavoriteSong: rid=$rid, pos=$position, isF=$isFavorite")
         if (position >= itemCount) return
         val mutableListFavIds = favIds.toMutableList()
         if (isFavorite) mutableListFavIds.add(rid)

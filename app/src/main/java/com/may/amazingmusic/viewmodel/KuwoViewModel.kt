@@ -1,6 +1,5 @@
 package com.may.amazingmusic.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -120,7 +119,6 @@ class KuwoViewModel : ViewModel() {
 
     val currentLrc = MutableLiveData("")
     fun getKuwoLrc(rid: Long) {
-        Log.e(TAG, "getKuwoLrc: ")
         viewModelScope.launch {
             repository.getLrc(currentLrc, rid)
         }
@@ -143,7 +141,6 @@ class KuwoViewModel : ViewModel() {
     )
 
     fun getBanners() {
-        Log.e(TAG, "getBanners: ")
         viewModelScope.launch {
             repository.getBanners(banners)
         }

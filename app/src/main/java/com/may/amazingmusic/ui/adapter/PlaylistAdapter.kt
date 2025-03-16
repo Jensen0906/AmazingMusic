@@ -1,7 +1,7 @@
 package com.may.amazingmusic.ui.adapter
 
+import android.annotation.SuppressLint
 import android.graphics.Typeface
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +12,6 @@ import com.may.amazingmusic.R
 import com.may.amazingmusic.bean.Song
 import com.may.amazingmusic.databinding.ItemPlaylistBinding
 import com.may.amazingmusic.utils.orInvalid
-import com.may.amazingmusic.utils.orZero
 import com.may.amazingmusic.utils.player.PlayerManager
 
 /**
@@ -21,6 +20,7 @@ import com.may.amazingmusic.utils.player.PlayerManager
  * @date 2024/9/17 1:30
  * @description PlaylistAdapter
  */
+@SuppressLint("NotifyDataSetChanged")
 class PlaylistAdapter(private var playlist: List<Song>, private val clickListener: PlaylistItemClickListener) :
     RecyclerView.Adapter<PlaylistAdapter.PlaylistViewHolder>() {
     private val TAG = this.javaClass.simpleName
@@ -84,7 +84,6 @@ class PlaylistAdapter(private var playlist: List<Song>, private val clickListene
 
     fun setCurrentSongIndex(currentSongIndex: Int) {
         if (currentSongIndex < 0) return
-        Log.i(TAG, "setCurrentSongIndex: index=${currentSongIndex}, lastIndex=${this.currentSongIndex}, playlist.size=${playlist.size}")
         val lastIndex = this.currentSongIndex
         this.currentSongIndex = currentSongIndex
         notifyItemChanged(lastIndex)

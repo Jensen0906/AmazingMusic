@@ -5,11 +5,9 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.may.amazingmusic.App.Companion.appContext
-import com.may.amazingmusic.R
 import com.may.amazingmusic.bean.Banner
+import com.may.amazingmusic.utils.globalGlideOptions
 import com.youth.banner.adapter.BannerAdapter
 
 
@@ -18,7 +16,8 @@ import com.youth.banner.adapter.BannerAdapter
  * @Date 2025/3/15 3:38
  */
 @SuppressLint("NotifyDataSetChanged")
-class MyBannerAdapter(bannerList: List<Banner?>, private val bannerListener: MyBannerClickListener): BannerAdapter<Banner, MyBannerAdapter.BannerViewHolder>(bannerList) {
+class MyBannerAdapter(bannerList: List<Banner?>, private val bannerListener: MyBannerClickListener) :
+    BannerAdapter<Banner, MyBannerAdapter.BannerViewHolder>(bannerList) {
     private val TAG = this.javaClass.simpleName
 
     override fun onCreateHolder(parent: ViewGroup?, viewType: Int): BannerViewHolder {
@@ -35,9 +34,7 @@ class MyBannerAdapter(bannerList: List<Banner?>, private val bannerListener: MyB
     }
 
     override fun onBindView(holder: BannerViewHolder, banner: Banner, position: Int, size: Int) {
-        Glide.with(appContext).load(banner.pic).diskCacheStrategy(DiskCacheStrategy.ALL)
-            .error(R.drawable.amazingmusic).transform(RoundedCorners(50))
-            .into(holder.imageView)
+        Glide.with(appContext).load(banner.pic).apply(globalGlideOptions(50)).into(holder.imageView)
         holder.imageView.setOnClickListener { bannerListener.itemClickListener(banner.id) }
     }
 
