@@ -13,7 +13,7 @@ android {
         minSdk = 24
         targetSdk = 34
         versionCode = 12
-        versionName = "1.12.25.0315"
+        versionName = "1.12.25.0316"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -78,5 +78,5 @@ dependencies {
     // lrc display
     implementation(libs.lyricViewX)
     // banner
-    implementation("io.github.youth5201314:banner:2.2.3")
+    implementation(libs.banner)
 }
