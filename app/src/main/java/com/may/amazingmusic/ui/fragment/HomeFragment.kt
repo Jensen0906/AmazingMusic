@@ -10,13 +10,17 @@ import androidx.annotation.OptIn
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.may.amazingmusic.R
+import com.may.amazingmusic.bean.Banner
 import com.may.amazingmusic.bean.Song
 import com.may.amazingmusic.databinding.FragmentHomeBinding
 import com.may.amazingmusic.ui.activity.MainActivity
+import com.may.amazingmusic.ui.adapter.MyBannerAdapter
+import com.may.amazingmusic.ui.adapter.MyBannerClickListener
 import com.may.amazingmusic.ui.adapter.SongsAdapter
 import com.may.amazingmusic.ui.adapter.SongsItemClickListener
 import com.may.amazingmusic.utils.DataStoreManager
@@ -43,8 +47,10 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
     private lateinit var songViewModel: SongViewModel
     private lateinit var kuwoViewModel: KuwoViewModel
     private lateinit var adapter: SongsAdapter
+    private var bannerAdapter: MyBannerAdapter? = null
     private val songs = mutableListOf<Song>()
     private val songsMap = mutableMapOf<Long, Int>()
+    private val banners = mutableListOf<Banner>()
 
     private val scrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -59,24 +65,17 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             }
         }
     }
+    private val myBannerClickListener = object : MyBannerClickListener {
+        override fun itemClickListener(bid: Long) {
+            kuwoViewModel.songListId.postValue(bid)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         songViewModel = ViewModelProvider(requireActivity())[SongViewModel::class.java]
         kuwoViewModel = ViewModelProvider(requireActivity())[KuwoViewModel::class.java]
         super.onCreate(savedInstanceState)
 
-        lifecycleScope.launch {
-            if (DataStoreManager.isKuwoSelected.first().isTrue()) {
-                binding.loading.visibility = View.INVISIBLE
-                binding.songsRv.visibility = View.INVISIBLE
-                binding.kuwoTips.visibility = View.VISIBLE
-                binding.banner.visibility = View.VISIBLE
-            } else {
-                binding.banner.visibility = View.INVISIBLE
-                binding.kuwoTips.visibility = View.INVISIBLE
-                binding.songsRv.visibility = View.VISIBLE
-            }
-        }
         initData(savedInstanceState)
         initClick()
         collectAndObserver()
@@ -86,6 +85,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         super.onSaveInstanceState(outState)
         outState.putParcelableArrayList("my_songs", ArrayList(songs))
         outState.putInt("my_page", PlayerManager.page)
+        outState.putParcelableArrayList("my_banners", ArrayList(banners))
         lifecycleScope.launch {
             outState.putLongArray("my_favorite_ids", songViewModel.favoriteSids.first()?.toLongArray())
         }
@@ -138,10 +138,23 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             }
             adapter.setFavoriteSongIds(myFavoriteIds)
             adapter.updateSongs(songs)
+
+            val myBanners = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                savedInstanceState.getParcelableArrayList("my_banners", Banner::class.java)
+            } else @Suppress("DEPRECATION") savedInstanceState.getParcelableArrayList("my_banners")
+            if (myBanners != null) {
+                banners.clear()
+                banners.addAll(myBanners)
+            }
+            bannerAdapter = MyBannerAdapter(banners, myBannerClickListener)
+            binding.banner.setAdapter(bannerAdapter, true)
+                .setViewTreeLifecycleOwner(viewLifecycleOwner)
         } else {
             PlayerManager.page = 1
             songViewModel.getFavoriteIds()
             songViewModel.getSongs(PlayerManager.page)
+
+            kuwoViewModel.getBanners()
             binding.loading.visibility = View.VISIBLE
             lifecycleScope.launch {
                 DataStoreManager.updateTimerOpened(false)
@@ -158,12 +171,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
     fun refreshView() {
         if (PlayerManager.isKuwoSource) {
             binding.loading.visibility = View.INVISIBLE
-            binding.kuwoTips.visibility = View.VISIBLE
             binding.songsRv.visibility = View.INVISIBLE
+            binding.banner.visibility = View.VISIBLE
             binding.refreshLayout.isRefreshing = false
         } else {
+            binding.banner.visibility = View.GONE
             binding.songsRv.visibility = View.VISIBLE
-            binding.kuwoTips.visibility = View.INVISIBLE
             songs.clear()
             setSongsHashMap(songs)
             adapter.updateSongs(emptyList())
@@ -178,6 +191,16 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
     }
 
     private fun collectAndObserver() {
+        lifecycleScope.launch {
+            if (DataStoreManager.isKuwoSelected.first().isTrue()) {
+                binding.loading.visibility = View.INVISIBLE
+                binding.songsRv.visibility = View.INVISIBLE
+                binding.banner.visibility = View.VISIBLE
+            } else {
+                binding.banner.visibility = View.GONE
+                binding.songsRv.visibility = View.VISIBLE
+            }
+        }
         lifecycleScope.launch {
             songViewModel.songs.collect {
                 binding.loading.visibility = View.INVISIBLE
@@ -217,6 +240,17 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
                 it.forEach { sid ->
                     adapter.notifyItemChanged(songsMap[sid].orZero())
                 }
+            }
+        }
+
+        lifecycleScope.launch {
+            kuwoViewModel.banners.collect {
+                Log.e(TAG, "collectAndObserver: banners: $it")
+                banners.clear()
+                banners.addAll(it ?: emptyList())
+                bannerAdapter = MyBannerAdapter(banners, myBannerClickListener)
+                binding.banner.setAdapter(bannerAdapter, true)
+                    .setViewTreeLifecycleOwner(viewLifecycleOwner)
             }
         }
     }

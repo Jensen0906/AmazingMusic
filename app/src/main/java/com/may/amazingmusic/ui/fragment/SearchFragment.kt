@@ -92,10 +92,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
         collectAndObserver()
     }
 
-    override fun setDataBinding(): FragmentSearchBinding {
-        return FragmentSearchBinding.inflate(layoutInflater)
-    }
-
     fun clearAdapterView() {
         Log.d(TAG, "clearAdapterView: ")
         songs.clear()
@@ -252,5 +248,9 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
         favoriteChangedSids.clear()
 //        kuwoViewModel.notifyFavoriteChanged(fChangedKuwoRids.toList())
 //        fChangedKuwoRids.clear()
+    }
+
+    override fun setDataBinding(): FragmentSearchBinding {
+        return FragmentSearchBinding.inflate(layoutInflater)
     }
 }

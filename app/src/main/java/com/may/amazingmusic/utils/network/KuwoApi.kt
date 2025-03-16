@@ -1,7 +1,9 @@
 package com.may.amazingmusic.utils.network
 
+import com.may.amazingmusic.bean.BannerData
 import com.may.amazingmusic.bean.KuwoSong
 import com.may.amazingmusic.bean.Lrclist
+import com.may.amazingmusic.bean.SongListInfo
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -19,8 +21,15 @@ interface KuwoApi {
     ): ApiResult<List<KuwoSong>?>
 
     @GET("/")
-    suspend fun getLrc(
-        @Query("id") rid: Long,
-        @Query("type") type: String,
-    ): ApiResult<Lrclist?>
+    suspend fun getLrc(@Query("id") rid: Long, @Query("type") type: String): ApiResult<Lrclist?>
+
+    @GET("banner/")
+    suspend fun getBanner(): ApiResult<BannerData>
+
+    @GET("/")
+    suspend fun getSongListInfo(
+        @Query("id") songListId: Long,
+        @Query("limit") limit: Int = 30,
+        @Query("type") type: String = "list"
+    ): ApiResult<SongListInfo>
 }

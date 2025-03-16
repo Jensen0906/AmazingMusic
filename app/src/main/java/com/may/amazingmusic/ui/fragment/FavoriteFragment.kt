@@ -88,7 +88,7 @@ class FavoriteFragment : BaseFragment<FragmentFavoriteBinding>() {
             }
 
             override fun favoriteClickListener(song: KuwoSong, position: Int) {
-                // Nothing need to do
+                kuwoViewModel.operateFavorite(song, position)
             }
 
         }, false )
@@ -119,6 +119,11 @@ class FavoriteFragment : BaseFragment<FragmentFavoriteBinding>() {
         songViewModel.favoriteSongs.observe(viewLifecycleOwner) {
             adapter.setFavoriteSongs(it)
             (activity as? MainActivity)?.makePlayAllEnable(!it.isNullOrEmpty(), false)
+        }
+        lifecycleScope.launch {
+            kuwoViewModel.operateFavoriteSong.collect {
+                kuwoSongAdapter.updateFavoriteSong(it.first, position = it.second, isFavorite = it.third)
+            }
         }
     }
     override fun setDataBinding(): FragmentFavoriteBinding {

@@ -33,6 +33,6 @@ class TargetService : MediaBrowserService() {
     }
 
     override fun onLoadChildren(parentId: String, result: Result<MutableList<MediaBrowser.MediaItem>>) {
-        // TODO("Not yet implemented")
+        // nothing to do
     }
 }

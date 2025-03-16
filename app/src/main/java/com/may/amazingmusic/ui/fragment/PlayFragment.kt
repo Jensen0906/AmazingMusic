@@ -125,12 +125,14 @@ class PlayFragment : BaseFragment<FragmentPlayBinding>() {
 
     private fun setPlayer() {
         if (PlayerManager.isKuwoSource) {
-            binding.playerView.visibility = View.GONE
+            binding.playerView.visibility = View.INVISIBLE
             binding.songCover.visibility = View.VISIBLE
+            binding.switchGroup.visibility = View.VISIBLE
             setCoverPic(songViewModel.currentSongPic.value)
         } else {
             binding.playerView.player = PlayerManager.player
-            binding.songCover.visibility = View.GONE
+            binding.songCover.visibility = View.INVISIBLE
+            binding.switchGroup.visibility = View.INVISIBLE
             binding.playerView.visibility = View.VISIBLE
         }
         binding.playSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {

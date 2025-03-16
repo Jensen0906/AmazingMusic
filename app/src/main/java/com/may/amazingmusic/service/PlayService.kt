@@ -14,6 +14,7 @@ import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.VectorDrawable
 import android.media.AudioManager
+import android.net.Uri
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
@@ -23,6 +24,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.util.BitmapLoader
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
@@ -31,6 +33,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.SettableFuture
 import com.may.amazingmusic.App.Companion.appContext
 import com.may.amazingmusic.R
 import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SHUFFLE
@@ -214,6 +218,31 @@ class PlayService : Service() {
                     })
             }
         }
+    }
+
+    private val bitmapLoader = object : BitmapLoader {
+        val future = SettableFuture.create<Bitmap>()
+        override fun supportsMimeType(mimeType: String): Boolean {
+            return true
+        }
+
+        override fun decodeBitmap(data: ByteArray): ListenableFuture<Bitmap> {
+            return future
+        }
+
+        override fun loadBitmap(uri: Uri): ListenableFuture<Bitmap> {
+            Glide.with(appContext).asBitmap().load(uri).into(object : CustomTarget<Bitmap>() {
+                override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                    future.set(resource)
+                }
+
+                override fun onLoadCleared(placeholder: Drawable?) {
+
+                }
+            })
+            return future
+        }
+
     }
 
     inner class MyBinder : Binder() {

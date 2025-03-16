@@ -50,6 +50,7 @@ import com.may.amazingmusic.ui.fragment.MineFragment
 import com.may.amazingmusic.ui.fragment.PlayFragment
 import com.may.amazingmusic.ui.fragment.SearchFragment
 import com.may.amazingmusic.ui.fragment.SettingsFragment
+import com.may.amazingmusic.ui.fragment.SongListFragment
 import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseActivity
@@ -78,6 +79,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private val settingsFragment = SettingsFragment()
     private val playFragment = PlayFragment()
     private val searchFragment = SearchFragment()
+    private val songListFragment = SongListFragment()
     private var currentFragment: Fragment = homeFragment
     private var lastFragment: Fragment = homeFragment
 
@@ -87,9 +89,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private var hasOpenPlayer = false
 
     private var curSongPos = 0
+    private var showToast = false
     private val playerListener = object : PlayerListener {
         override fun onIsPlayingChanged(isPlaying: Boolean, title: String?) {
-//            if (isPlaying.isTrue()) ToastyUtils.success("正在播放 - $title")
+            if (isPlaying && showToast) {
+                ToastyUtils.success("正在播放 - $title")
+                showToast = false
+            }
             binding.playIv.setImageResource(
                 if (isPlaying) R.drawable.icon_pause else R.drawable.icon_play
             )
@@ -103,20 +109,30 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 curSongPos = position
                 playlistAdapter?.setCurrentSongIndex(position)
                 playlistBinding.playlistRv.scrollToPosition(position)
+                showToast = true
             }
-            val coverUrl = mediaItem?.mediaMetadata?.extras?.getString("cover_url", "")
-            Glide.with(this@MainActivity)
-                .load(coverUrl)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .error(R.drawable.amazingmusic)
-                .transform(CenterCrop(), RoundedCorners(54))
-                .into(binding.displayPlayerIv)
 
             if (PlayerManager.isKuwoSource) {
+                val coverUrl = mediaItem?.mediaMetadata?.extras?.getString("cover_url", "")
+                Glide.with(this@MainActivity)
+                    .load(coverUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .error(R.drawable.amazingmusic)
+                    .transform(CenterCrop(), RoundedCorners(50))
+                    .into(binding.displayPlayerIv)
                 songViewModel.currentSongPic.postValue(coverUrl)
                 if (position >= 0 && position < PlayerManager.playlist.size) {
                     kuwoViewModel.getKuwoLrc(PlayerManager.playlist[position].sid)
                 }
+            } else {
+                val coverData = mediaItem?.mediaMetadata?.artworkUri
+                Log.e(TAG, "onMediaItemTransition: cover=$coverData")
+                Glide.with(this@MainActivity)
+                    .load(coverData)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .error(R.drawable.amazingmusic)
+                    .transform(CenterCrop(), RoundedCorners(50))
+                    .into(binding.displayPlayerIv)
             }
         }
     }
@@ -135,10 +151,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         setSupportActionBar(binding.toolbar)
 
         kuwoViewModel.isKuwoSource()
-        kuwoViewModel.isKuwoSource.observe(this) {
-            PlayerManager.isKuwoSource = it
-            homeFragment.refreshView()
-        }
 
         initViewAndAdapter()
         onClick()
@@ -260,6 +272,15 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }
         }
 
+        kuwoViewModel.isKuwoSource.observe(this) {
+            PlayerManager.isKuwoSource = it
+            homeFragment.refreshView()
+            PlayerManager.clearPlaylist()
+        }
+        kuwoViewModel.songListId.observe(this) {
+            if (currentFragment is HomeFragment && it >= 0)
+            switchFragment(songListFragment)
+        }
     }
 
     private fun onClick() {

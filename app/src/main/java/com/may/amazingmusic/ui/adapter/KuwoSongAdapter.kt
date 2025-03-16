@@ -1,6 +1,7 @@
 package com.may.amazingmusic.ui.adapter
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -43,7 +44,7 @@ class KuwoSongAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (holder is SongViewHolder) {
             if (songList.isEmpty() || position >= songList.size) return
-            if (isFavoriteAdapter) holder.itemKuwoSongBinding.favoriteIv.visibility = View.GONE
+//            if (isFavoriteAdapter) holder.itemKuwoSongBinding.favoriteIv.visibility = View.GONE
 
             val song = songList[position]
 
@@ -94,6 +95,7 @@ class KuwoSongAdapter(
     }
 
     fun updateFavoriteSong(rid: Long, position: Int, isFavorite: Boolean) {
+        Log.e(TAG, "updateFavoriteSong: rid=$rid, pos=$position, isF=$isFavorite")
         if (position >= itemCount) return
         val mutableListFavIds = favIds.toMutableList()
         if (isFavorite) mutableListFavIds.add(rid)
@@ -108,6 +110,11 @@ class KuwoSongAdapter(
             this.songList = emptyList()
         } else {
             this.songList = kuwoSongs
+            val rids = mutableListOf<Long>()
+            kuwoSongs.forEach {
+                rids.add(it.rid)
+            }
+            favIds = rids
         }
         isFavoriteAdapter = true
         notifyDataSetChanged()

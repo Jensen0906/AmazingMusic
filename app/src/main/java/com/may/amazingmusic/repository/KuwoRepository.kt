@@ -1,7 +1,9 @@
 package com.may.amazingmusic.repository
 
 import androidx.lifecycle.MutableLiveData
+import com.may.amazingmusic.bean.Banner
 import com.may.amazingmusic.bean.KuwoSong
+import com.may.amazingmusic.bean.SongListInfo
 import com.may.amazingmusic.constant.NetWorkConst
 import com.may.amazingmusic.utils.RetrofitService
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -65,6 +67,25 @@ class KuwoRepository {
         }.onFailure {
             it.printStackTrace()
             lrc.postValue(null)
+        }
+    }
+
+    suspend fun getBanners(banners: MutableSharedFlow<List<Banner>?>) {
+        runCatching {
+            val result = kuwoApi.getBanner()
+            banners.tryEmit(result.data?.banners)
+        }.onFailure {
+            it.printStackTrace()
+            banners.tryEmit(null)
+        }
+    }
+
+    suspend fun getSongListInfo(songListInfo: MutableSharedFlow<SongListInfo?>, songListId: Long) {
+        runCatching {
+            songListInfo.tryEmit(kuwoApi.getSongListInfo(songListId).data)
+        }.onFailure {
+            it.printStackTrace()
+            songListInfo.tryEmit(null)
         }
     }
 }

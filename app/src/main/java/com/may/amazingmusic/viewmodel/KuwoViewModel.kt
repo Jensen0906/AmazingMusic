@@ -5,7 +5,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.may.amazingmusic.bean.Banner
 import com.may.amazingmusic.bean.KuwoSong
+import com.may.amazingmusic.bean.SongListInfo
 import com.may.amazingmusic.bean.User
 import com.may.amazingmusic.constant.NetWorkConst
 import com.may.amazingmusic.repository.KuwoRepository
@@ -37,6 +39,7 @@ class KuwoViewModel : ViewModel() {
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
+
     fun searchSongs(keyword: String?) {
         if (keyword.isNullOrEmpty() || PlayerManager.kuwoPage >= 10) {
             searchSongs.tryEmit(emptyList())
@@ -62,6 +65,7 @@ class KuwoViewModel : ViewModel() {
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
+
     fun getMyKuwoSongs() {
         viewModelScope.launch {
             val uid = DataStoreManager.userIDFlow.first().orZero()
@@ -81,6 +85,7 @@ class KuwoViewModel : ViewModel() {
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
+
     fun getMyKuwoSongRids() {
         viewModelScope.launch {
             val uid = DataStoreManager.userIDFlow.first().orZero()
@@ -126,9 +131,38 @@ class KuwoViewModel : ViewModel() {
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
+
     private fun operateKuwoSongIds(rid: Long, position: Int, isFavorite: Boolean = false) {
         operateFavoriteSong.tryEmit(Triple(rid, position, isFavorite))
     }
 
+    val banners = MutableSharedFlow<List<Banner>?>(
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
 
+    fun getBanners() {
+        Log.e(TAG, "getBanners: ")
+        viewModelScope.launch {
+            repository.getBanners(banners)
+        }
+    }
+
+    val songListId = MutableLiveData(-1L)
+    val songListInfo = MutableSharedFlow<SongListInfo?>(
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    fun getSongListInfo() {
+        viewModelScope.launch {
+            val id = songListId.value
+            if (id == null || id < 0L) {
+                songListInfo.tryEmit(null)
+                return@launch
+            }
+            repository.getSongListInfo(songListInfo, id)
+        }
+    }
 }
