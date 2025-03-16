@@ -133,7 +133,6 @@ object PlayerManager {
     }
 
     fun changePlayMode() {
-        Log.d(TAG, "changePlayMode: repeatMode=${repeatModeLiveData.value}")
         when (repeatModeLiveData.value) {
             REPEAT_MODE_SINGLE -> {
                 // Change to REPEAT_MODE_LOOP (REPEAT_MODE_ALL, close shuffle mode)
@@ -178,6 +177,7 @@ object PlayerManager {
     }
 
     fun clearPlaylist() {
+        Log.e(TAG, "clearPlaylist: ")
         player?.clearMediaItems()
         playlist.clear()
         playerListeners.forEach {

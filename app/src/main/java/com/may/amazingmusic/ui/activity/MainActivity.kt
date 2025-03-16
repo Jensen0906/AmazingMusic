@@ -230,6 +230,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private fun initDataAndObserver() {
         lifecycleScope.launch {
             songViewModel.addSongToPlay.collect {
+                Log.e(TAG, "initDataAndObserver: ")
                 it.firstNotNullOf { entry ->
                     Log.d(TAG, "addSongToPlay: song=${entry.key}, position=${entry.value}")
                     when (entry.value) {
@@ -261,6 +262,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
 
         kuwoViewModel.isKuwoSource.observe(this) {
+            if (PlayerManager.isKuwoSource == it) return@observe
             PlayerManager.isKuwoSource = it
             homeFragment.refreshView()
             PlayerManager.clearPlaylist()
@@ -445,7 +447,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     private suspend fun justPlayFirstSong(song: Song) {
         Log.d(TAG, "justPlayFirstSong: song=${song.title}")
-        PlayerManager.clearPlaylist()
+//        PlayerManager.clearPlaylist()
         val intent = Intent(this, PlayService::class.java)
 
         if (isPlayServiceBinding.isTrue() && PlayerManager.player == null) unbindService(serviceConnection)

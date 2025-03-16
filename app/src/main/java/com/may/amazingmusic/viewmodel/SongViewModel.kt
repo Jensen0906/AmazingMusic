@@ -75,7 +75,7 @@ class SongViewModel : ViewModel() {
 
     val addSongToPlay = MutableSharedFlow<Map<Song, Int>>(
         replay = 0,
-        extraBufferCapacity = 1,
+        extraBufferCapacity = Int.MAX_VALUE,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     fun addSongToPlaylist(song: Song, playNow: Boolean = false) {
@@ -153,7 +153,7 @@ class SongViewModel : ViewModel() {
         }
         PlayerManager.clearPlaylist()
         songs.forEachIndexed { index, song ->
-            Log.d(TAG, "addAllSongsToPlaylist: index=$index, song=${song.title}")
+            Log.i(TAG, "addAllSongsToPlaylist: index=$index, song=${song.title}")
             addSongToPlay.tryEmit(mapOf(Pair(song, ADD_LIST_LAST)))
         }
         PlayerManager.playAsRepeatMode()
