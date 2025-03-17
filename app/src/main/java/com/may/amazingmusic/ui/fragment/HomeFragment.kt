@@ -75,10 +75,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         songViewModel = ViewModelProvider(requireActivity())[SongViewModel::class.java]
         kuwoViewModel = ViewModelProvider(requireActivity())[KuwoViewModel::class.java]
         super.onCreate(savedInstanceState)
-
-        initData(savedInstanceState)
-        initClick()
-        collectAndObserver()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -92,8 +88,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        binding.songsRv.removeOnScrollListener(scrollListener)
-        binding.songsRv.addOnScrollListener(scrollListener)
+        initData(savedInstanceState)
+        initClick()
+        collectAndObserver()
         return binding.root
     }
 
@@ -166,6 +163,8 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         binding.refreshLayout.setOnRefreshListener {
             refreshView()
         }
+        binding.songsRv.removeOnScrollListener(scrollListener)
+        binding.songsRv.addOnScrollListener(scrollListener)
     }
 
     fun refreshView() {
