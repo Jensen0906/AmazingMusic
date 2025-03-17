@@ -148,17 +148,21 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
 
     }
 
+    private var lockSearch = false
     private fun searchSong(keyword: String?) {
         binding.searchSongsRv.removeOnScrollListener(scrollListener)
         this.keyword = keyword
         kuwoSongAdapter.setLoading(true)
         binding.loading.visibility = if (PlayerManager.isKuwoSource && PlayerManager.kuwoPage > 1) View.GONE else View.VISIBLE
-        if (PlayerManager.isKuwoSource) kuwoViewModel.searchSongs(keyword) else songViewModel.findSongsByAny(keyword)
+        if (PlayerManager.isKuwoSource) {
+            if (!lockSearch) {
+                lockSearch = true
+                kuwoViewModel.searchSongs(keyword)
+            }
+        } else songViewModel.findSongsByAny(keyword)
     }
 
     private val favoriteChangedSids = mutableListOf<Long>()
-
-    //    private val fChangedKuwoRids = mutableListOf<Long>()
     private fun collectAndObserver() {
         lifecycleScope.launch {
             songViewModel.searchSongs.collect {
@@ -196,6 +200,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
             kuwoViewModel.searchSongs.collect {
                 binding.loading.visibility = View.GONE
                 binding.searchSongsRv.addOnScrollListener(scrollListener)
+                lockSearch = false
                 if (it.isNullOrEmpty()) {
                     if (PlayerManager.kuwoPage >= 10) {
                         ToastyUtils.warning("再玩要被玩坏了")
@@ -210,7 +215,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
 
                 kuwoSongs.addAll(it)
                 if (kuwoSongAdapter.hasSetFavorite) {
-                    kuwoSongAdapter.updateSongs(kuwoSongs, PlayerManager.kuwoPage)
+                    kuwoSongAdapter.updateSongs(kuwoSongs, true)
                 }
             }
         }
@@ -226,11 +231,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
             kuwoViewModel.operateFavoriteSong.collect {
                 val rid = it.first
                 kuwoSongAdapter.updateFavoriteSong(rid, position = it.second, isFavorite = it.third)
-//                if (rid in favoriteChangedSids) {
-//                    fChangedKuwoRids.remove(rid)
-//                } else {
-//                    fChangedKuwoRids.add(rid)
-//                }
             }
         }
 

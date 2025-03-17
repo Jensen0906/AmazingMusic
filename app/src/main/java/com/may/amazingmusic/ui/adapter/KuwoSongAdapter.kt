@@ -41,7 +41,6 @@ class KuwoSongAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (holder is SongViewHolder) {
             if (songList.isEmpty() || position >= songList.size) return
-//            if (isFavoriteAdapter) holder.itemKuwoSongBinding.favoriteIv.visibility = View.GONE
 
             val song = songList[position]
 
@@ -74,14 +73,15 @@ class KuwoSongAdapter(
     }
 
 
-    fun updateSongs(newSongList: List<KuwoSong>, page: Int) {
-        this.songList = newSongList
-        notifyItemInserted(page * 10 - 1)
-    }
-
-    fun updateSongs(newSongList: List<KuwoSong>) {
-        this.songList = newSongList
-        notifyDataSetChanged()
+    fun updateSongs(newSongList: List<KuwoSong>, addLast: Boolean = false) {
+        if (addLast) {
+            val last = songList.size - 1
+            this.songList = newSongList
+            notifyItemInserted(last)
+        } else {
+            this.songList = newSongList
+            notifyDataSetChanged()
+        }
     }
 
     fun setLoading(loading: Boolean) {

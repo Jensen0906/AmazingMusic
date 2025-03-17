@@ -29,7 +29,8 @@ interface KuwoApi {
     @GET("/")
     suspend fun getSongListInfo(
         @Query("id") songListId: Long,
-        @Query("limit") limit: Int = 30,
+        @Query("page") page: Int,
+        @Query("limit") limit: Int = 10,
         @Query("type") type: String = "list"
     ): ApiResult<SongListInfo>
 }

@@ -142,7 +142,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         initViewAndAdapter()
         onClick()
-        initDataAndObserver()
+        initDataAndObserver(savedInstanceState)
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -227,7 +227,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         PlayerManager.playerListeners.add(playerListener)
     }
 
-    private fun initDataAndObserver() {
+    private fun initDataAndObserver(savedInstanceState: Bundle?) {
         lifecycleScope.launch {
             songViewModel.addSongToPlay.collect {
                 Log.e(TAG, "initDataAndObserver: ")
@@ -268,7 +268,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             PlayerManager.clearPlaylist()
         }
         kuwoViewModel.songListId.observe(this) {
-            if (currentFragment is HomeFragment && it >= 0)
+            if (currentFragment is HomeFragment && it >= 0 && savedInstanceState == null)
                 switchFragment(songListFragment)
         }
     }

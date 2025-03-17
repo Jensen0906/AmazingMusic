@@ -80,9 +80,9 @@ class KuwoRepository {
         }
     }
 
-    suspend fun getSongListInfo(songListInfo: MutableSharedFlow<SongListInfo?>, songListId: Long) {
+    suspend fun getSongListInfo(songListInfo: MutableSharedFlow<SongListInfo?>, songListId: Long, page: Int = 1) {
         runCatching {
-            songListInfo.tryEmit(kuwoApi.getSongListInfo(songListId).data)
+            songListInfo.tryEmit(kuwoApi.getSongListInfo(songListId = songListId, page = page).data)
         }.onFailure {
             it.printStackTrace()
             songListInfo.tryEmit(null)
