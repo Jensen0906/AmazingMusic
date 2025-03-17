@@ -3,6 +3,7 @@ package com.may.amazingmusic.utils.network
 import com.may.amazingmusic.bean.BannerData
 import com.may.amazingmusic.bean.KuwoSong
 import com.may.amazingmusic.bean.Lrclist
+import com.may.amazingmusic.bean.SongList
 import com.may.amazingmusic.bean.SongListInfo
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -33,4 +34,11 @@ interface KuwoApi {
         @Query("limit") limit: Int = 10,
         @Query("type") type: String = "list"
     ): ApiResult<SongListInfo>
+
+    @GET("/")
+    suspend fun getSongLists(
+        @Query("type") type: String = "new",
+        @Query("page") page: Int,
+        @Query("limit") limit: Int = 9
+    ): ApiResult<List<SongList>?>
 }

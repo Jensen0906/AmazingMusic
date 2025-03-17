@@ -16,7 +16,7 @@ import com.youth.banner.adapter.BannerAdapter
  * @Date 2025/3/15 3:38
  */
 @SuppressLint("NotifyDataSetChanged")
-class MyBannerAdapter(bannerList: List<Banner?>, private val bannerListener: MyBannerClickListener) :
+class MyBannerAdapter(bannerList: List<Banner?>, private val bannerListener: SongListClickListener) :
     BannerAdapter<Banner, MyBannerAdapter.BannerViewHolder>(bannerList) {
     private val TAG = this.javaClass.simpleName
 

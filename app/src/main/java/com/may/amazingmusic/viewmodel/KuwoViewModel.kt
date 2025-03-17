@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.may.amazingmusic.bean.Banner
 import com.may.amazingmusic.bean.KuwoSong
+import com.may.amazingmusic.bean.SongList
 import com.may.amazingmusic.bean.SongListInfo
 import com.may.amazingmusic.bean.User
 import com.may.amazingmusic.constant.NetWorkConst
@@ -30,8 +31,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 class KuwoViewModel : ViewModel() {
     private val TAG = this.javaClass.simpleName
 
-    private val repository = KuwoRepository()
-    private var keyword = ""
+    var songInListPage = 1
     var songListPage = 1
 
 
@@ -132,10 +132,6 @@ class KuwoViewModel : ViewModel() {
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
 
-    private fun operateKuwoSongIds(rid: Long, position: Int, isFavorite: Boolean = false) {
-        operateFavoriteSong.tryEmit(Triple(rid, position, isFavorite))
-    }
-
     val banners = MutableSharedFlow<List<Banner>?>(
         replay = 0,
         extraBufferCapacity = 1,
@@ -162,7 +158,26 @@ class KuwoViewModel : ViewModel() {
                 songListInfo.tryEmit(null)
                 return@launch
             }
-            repository.getSongListInfo(songListInfo, songListId = id, page = songListPage)
+            repository.getSongListInfo(songListInfo, songListId = id, page = songInListPage)
         }
     }
+
+    val kuwoSongLists = MutableSharedFlow<List<SongList>?>(
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    fun getKuwoSongLists() {
+        viewModelScope.launch {
+            repository.getSongLists(kuwoSongLists, page = songListPage)
+        }
+    }
+
+
+    private val repository = KuwoRepository()
+    private var keyword = ""
+    private fun operateKuwoSongIds(rid: Long, position: Int, isFavorite: Boolean = false) {
+        operateFavoriteSong.tryEmit(Triple(rid, position, isFavorite))
+    }
+
 }

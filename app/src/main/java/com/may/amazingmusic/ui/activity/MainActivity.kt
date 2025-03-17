@@ -142,7 +142,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         initViewAndAdapter()
         onClick()
-        initDataAndObserver(savedInstanceState)
+        initDataAndObserver()
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -199,25 +199,30 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private var playlistAdapter: PlaylistAdapter? = null
     private lateinit var playlistBinding: DialogShowPlaylistBinding
     private fun initViewAndAdapter() {
-        playlistBinding =
-            DataBindingUtil.inflate(layoutInflater, R.layout.dialog_show_playlist, null, false)
-        playlistAdapter = PlaylistAdapter(PlayerManager.playlist, object : PlaylistItemClickListener {
-            override fun itemClickListener(position: Int) {
-                PlayerManager.playSongByPosition(position)
-            }
-
-            override fun itemRemoveListener(position: Int) {
-                if (isAnimating) return
-                PlayerManager.removeMediaItem(position)
-                if (PlayerManager.playlist.isEmpty()) {
-                    playlistBinding.clearListLayout.visibility = View.GONE
-                    playlistBinding.playModeLayout.visibility = View.GONE
-                    playlistDialog?.dismiss()
-                    PlayerManager.disableTimer.postValue(false)
+        playlistBinding = DataBindingUtil.inflate(
+            layoutInflater,
+            R.layout.dialog_show_playlist,
+            null, false
+        )
+        playlistAdapter = PlaylistAdapter(
+            PlayerManager.playlist, object : PlaylistItemClickListener {
+                override fun itemClickListener(position: Int) {
+                    PlayerManager.playSongByPosition(position)
                 }
-                playlistAdapter?.removeSongFromList(position)
+
+                override fun itemRemoveListener(position: Int) {
+                    if (isAnimating) return
+                    PlayerManager.removeMediaItem(position)
+                    if (PlayerManager.playlist.isEmpty()) {
+                        playlistBinding.clearListLayout.visibility = View.GONE
+                        playlistBinding.playModeLayout.visibility = View.GONE
+                        playlistDialog?.dismiss()
+                        PlayerManager.disableTimer.postValue(false)
+                    }
+                    playlistAdapter?.removeSongFromList(position)
+                }
             }
-        })
+        )
 
         playlistBinding.playlistRv.adapter = playlistAdapter
         playlistBinding.playlistRv.layoutManager = LinearLayoutManager(this)
@@ -227,7 +232,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         PlayerManager.playerListeners.add(playerListener)
     }
 
-    private fun initDataAndObserver(savedInstanceState: Bundle?) {
+    private fun initDataAndObserver() {
         lifecycleScope.launch {
             songViewModel.addSongToPlay.collect {
                 Log.e(TAG, "initDataAndObserver: ")
@@ -244,7 +249,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
 
         lifecycleScope.launch {
-            PlayerManager.repeatModeLiveData.postValue(DataStoreManager.repeatModeFlow.first().orZero())
+            PlayerManager.repeatModeLiveData.postValue(
+                DataStoreManager.repeatModeFlow.first().orZero()
+            )
         }
 
         PlayerManager.repeatModeLiveData.observe(this) {
@@ -268,7 +275,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             PlayerManager.clearPlaylist()
         }
         kuwoViewModel.songListId.observe(this) {
-            if (currentFragment is HomeFragment && it >= 0 && savedInstanceState == null)
+            if (currentFragment is HomeFragment && it >= 0)
                 switchFragment(songListFragment)
         }
     }
@@ -427,7 +434,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }
         }
 
-        playlistBinding.clearListLayout.visibility = if (PlayerManager.playlist.isEmpty()) View.GONE else View.VISIBLE
+        playlistBinding.clearListLayout.visibility =
+            if (PlayerManager.playlist.isEmpty()) View.GONE else View.VISIBLE
         playlistBinding.playModeLayout.visibility = playlistBinding.clearListLayout.visibility
         playlistAdapter?.setCurrentSongIndex(curSongPos.orZero())
         playlistBinding.playlistRv.scrollToPosition(curSongPos.orZero())
@@ -450,7 +458,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 //        PlayerManager.clearPlaylist()
         val intent = Intent(this, PlayService::class.java)
 
-        if (isPlayServiceBinding.isTrue() && PlayerManager.player == null) unbindService(serviceConnection)
+        if (isPlayServiceBinding.isTrue() && PlayerManager.player == null) unbindService(
+            serviceConnection
+        )
 
         if (PlayerManager.player == null) {
             val dataSourceFactory = PlayerManager.buildCacheDataSourceFactory(this)
@@ -476,7 +486,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                         .setMediaMetadata(
                             MediaMetadata.Builder()
                                 .setTitle(song.title).setArtist(song.singer)
-                                .setArtworkData(loadImageToByteArray(song.coverUrl), MediaMetadata.PICTURE_TYPE_FRONT_COVER)
+                                .setArtworkData(
+                                    loadImageToByteArray(song.coverUrl),
+                                    MediaMetadata.PICTURE_TYPE_FRONT_COVER
+                                )
                                 .build()
                         ).build()
                 } else MediaItem.fromUri(it)
@@ -489,13 +502,21 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             player.repeatMode =
                 if (PlayerManager.repeatModeLiveData.value == REPEAT_MODE_SINGLE) ExoPlayer.REPEAT_MODE_ONE
                 else ExoPlayer.REPEAT_MODE_ALL
-            player.shuffleModeEnabled = PlayerManager.repeatModeLiveData.value == REPEAT_MODE_SHUFFLE
+            player.shuffleModeEnabled =
+                PlayerManager.repeatModeLiveData.value == REPEAT_MODE_SHUFFLE
             player.playWhenReady = true
         }
     }
 
-    private suspend fun addSongToPlaylist(song: Song, playNow: Boolean = false, addToLast: Boolean = false) {
-        Log.d(TAG, "addSongToPlaylist: song=${song.title}, is first?=${PlayerManager.playlist.isEmpty()}")
+    private suspend fun addSongToPlaylist(
+        song: Song,
+        playNow: Boolean = false,
+        addToLast: Boolean = false
+    ) {
+        Log.d(
+            TAG,
+            "addSongToPlaylist: song=${song.title}, is first?=${PlayerManager.playlist.isEmpty()}"
+        )
         if (PlayerManager.playlist.isEmpty()) {
             justPlayFirstSong(song)
         } else {
@@ -510,7 +531,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                             .setMediaMetadata(
                                 MediaMetadata.Builder()
                                     .setTitle(song.title).setArtist(song.singer)
-                                    .setArtworkData(loadImageToByteArray(song.coverUrl), MediaMetadata.PICTURE_TYPE_FRONT_COVER)
+                                    .setArtworkData(
+                                        loadImageToByteArray(song.coverUrl),
+                                        MediaMetadata.PICTURE_TYPE_FRONT_COVER
+                                    )
                                     .build()
                             )
                             .build()
@@ -546,17 +570,26 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }
 
             else -> {
-                transaction.setCustomAnimations(R.anim.fragment_right_enter, R.anim.fragment_hold_on)
+                transaction.setCustomAnimations(
+                    R.anim.fragment_right_enter,
+                    R.anim.fragment_hold_on
+                )
             }
         }
 
         when (currentFragment) {
             playFragment -> {
                 if (fragment is HomeFragment || fragment is SongListFragment) {
-                    transaction.setCustomAnimations(R.anim.fragment_hold_on, R.anim.fragment_play_exit)
+                    transaction.setCustomAnimations(
+                        R.anim.fragment_hold_on,
+                        R.anim.fragment_play_exit
+                    )
                         .hide(currentFragment).show(fragment).commit()
                 } else {
-                    transaction.setCustomAnimations(R.anim.fragment_hold_on, R.anim.fragment_play_exit)
+                    transaction.setCustomAnimations(
+                        R.anim.fragment_hold_on,
+                        R.anim.fragment_play_exit
+                    )
                         .hide(currentFragment).add(R.id.fg_view, fragment).show(fragment).commit()
                 }
                 supportFragmentManager.beginTransaction().remove(currentFragment).commit()
@@ -571,9 +604,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     supportFragmentManager.beginTransaction().remove(currentFragment).commit()
                     lastFragment = homeFragment
                 } else if (currentFragment !is HomeFragment && currentFragment !is SongListFragment) {
-                    transaction.remove(currentFragment).add(R.id.fg_view, fragment).show(fragment).commit()
+                    transaction.remove(currentFragment).add(R.id.fg_view, fragment).show(fragment)
+                        .commit()
                 } else {
-                    transaction.hide(currentFragment).add(R.id.fg_view, fragment).show(fragment).commit()
+                    transaction.hide(currentFragment).add(R.id.fg_view, fragment).show(fragment)
+                        .commit()
                 }
             }
         }
@@ -587,8 +622,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         binding.searchIv.visibility =
             if (currentFragment is HomeFragment) View.VISIBLE else View.GONE
 
-        binding.notifyIv.visibility = if (currentFragment is MineFragment) View.VISIBLE else View.GONE
-        binding.playAllBtn.visibility = if (currentFragment is FavoriteFragment) View.VISIBLE else View.GONE
+        binding.notifyIv.visibility =
+            if (currentFragment is MineFragment) View.VISIBLE else View.GONE
+        binding.playAllBtn.visibility =
+            if (currentFragment is FavoriteFragment) View.VISIBLE else View.GONE
     }
 
     private suspend fun loadImageToByteArray(coverUrl: String?): ByteArray? {

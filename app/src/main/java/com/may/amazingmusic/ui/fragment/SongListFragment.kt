@@ -22,6 +22,7 @@ import com.may.amazingmusic.utils.convertToSong
 import com.may.amazingmusic.utils.orZero
 import com.may.amazingmusic.viewmodel.KuwoViewModel
 import com.may.amazingmusic.viewmodel.SongViewModel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
@@ -51,25 +52,22 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         initData()
-        return binding.root
     }
 
     override fun onResume() {
         kuwoSongAdapter.updateSongs(emptyList())
         super.onResume()
         collectsAndObserves()
-        kuwoViewModel.getSongListInfo()
-        binding.loadingBar.visibility = View.VISIBLE
-        binding.songListRv.addOnScrollListener(scrollListener)
         (requireActivity() as MainActivity).songListFragmentAlive = true
     }
 
     private fun initData() {
         songViewModel = ViewModelProvider(requireActivity())[SongViewModel::class.java]
         kuwoViewModel = ViewModelProvider(requireActivity())[KuwoViewModel::class.java]
-        kuwoViewModel.songListPage = 1
+        kuwoViewModel.songInListPage = 1
 
         kuwoSongAdapter = KuwoSongAdapter(kuwoSongs, object : KuwoSongClickListener {
             override fun itemClickListener(song: KuwoSong) {
@@ -86,6 +84,11 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
         })
         binding.songListRv.adapter = kuwoSongAdapter
         binding.songListRv.layoutManager = LinearLayoutManager(requireContext())
+
+        kuwoViewModel.getMyKuwoSongRids()
+        kuwoViewModel.getSongListInfo()
+        binding.loadingBar.visibility = View.VISIBLE
+        binding.songListRv.addOnScrollListener(scrollListener)
     }
 
     private fun collectsAndObserves() {
@@ -95,16 +98,20 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
                 if (it == null || it.musicList.isNullOrEmpty()) {
                     ToastyUtils.error("获取歌曲失败")
                 } else {
-                    if (kuwoViewModel.songListPage <= 1) {
+                    if (kuwoViewModel.songInListPage <= 1) {
                         kuwoSongs.clear()
                         kuwoSongs.addAll(it.musicList!!)
-                        kuwoSongAdapter.updateSongs(kuwoSongs)
+                        if (kuwoSongAdapter.hasSetFavorite) {
+                            kuwoSongAdapter.updateSongs(kuwoSongs)
+                        }
                     } else {
                         kuwoSongs.addAll(it.musicList!!)
-                        kuwoSongAdapter.updateSongs(kuwoSongs, true)
+                        if (kuwoSongAdapter.hasSetFavorite) {
+                            kuwoSongAdapter.updateSongs(kuwoSongs, true)
+                        }
                     }
-                    kuwoViewModel.songListPage++
-                    if (kuwoViewModel.songListPage > 10) {
+                    kuwoViewModel.songInListPage++
+                    if (kuwoViewModel.songInListPage > 20) {
                         binding.songListRv.removeOnScrollListener(scrollListener)
                         lockGetSongs = true
                         kuwoSongAdapter.setLoading(false)
@@ -113,6 +120,12 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
                         lockGetSongs = false
                     }
                 }
+            }
+        }
+        lifecycleScope.launch {
+            kuwoViewModel.myKuwoSongRids.collect {
+                kuwoSongAdapter.setFavoriteKuwoSongRids(it)
+                kuwoSongAdapter.updateSongs(kuwoSongs)
             }
         }
     }

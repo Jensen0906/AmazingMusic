@@ -12,23 +12,28 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.media3.common.util.UnstableApi
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.may.amazingmusic.R
 import com.may.amazingmusic.bean.Banner
 import com.may.amazingmusic.bean.Song
+import com.may.amazingmusic.bean.SongList
 import com.may.amazingmusic.databinding.FragmentHomeBinding
 import com.may.amazingmusic.ui.activity.MainActivity
+import com.may.amazingmusic.ui.adapter.KuwoSongListsAdapter
 import com.may.amazingmusic.ui.adapter.MyBannerAdapter
-import com.may.amazingmusic.ui.adapter.MyBannerClickListener
+import com.may.amazingmusic.ui.adapter.SongListClickListener
 import com.may.amazingmusic.ui.adapter.SongsAdapter
 import com.may.amazingmusic.ui.adapter.SongsItemClickListener
 import com.may.amazingmusic.utils.DataStoreManager
+import com.may.amazingmusic.utils.GridSpaceItemDecoration
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseFragment
 import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.orZero
 import com.may.amazingmusic.utils.player.PlayerManager
+import com.may.amazingmusic.utils.spToPx
 import com.may.amazingmusic.viewmodel.KuwoViewModel
 import com.may.amazingmusic.viewmodel.SongViewModel
 import kotlinx.coroutines.flow.first
@@ -46,11 +51,15 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
 
     private lateinit var songViewModel: SongViewModel
     private lateinit var kuwoViewModel: KuwoViewModel
+
     private lateinit var adapter: SongsAdapter
     private var bannerAdapter: MyBannerAdapter? = null
+    private lateinit var songListAdapter: KuwoSongListsAdapter
+
     private val songs = mutableListOf<Song>()
     private val songsMap = mutableMapOf<Long, Int>()
     private val banners = mutableListOf<Banner>()
+    private val songLists = mutableListOf<SongList>()
 
     private val scrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -65,9 +74,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             }
         }
     }
-    private val myBannerClickListener = object : MyBannerClickListener {
-        override fun itemClickListener(bid: Long) {
-            kuwoViewModel.songListId.postValue(bid)
+    private val songListItemClickListener = object : SongListClickListener {
+        override fun itemClickListener(songListId: Long) {
+            kuwoViewModel.songListId.postValue(songListId)
         }
     }
 
@@ -82,6 +91,8 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         outState.putParcelableArrayList("my_songs", ArrayList(songs))
         outState.putInt("my_page", PlayerManager.page)
         outState.putParcelableArrayList("my_banners", ArrayList(banners))
+        outState.putParcelableArrayList("my_kuwo_song_lists", ArrayList(banners))
+
         lifecycleScope.launch {
             outState.putLongArray("my_favorite_ids", songViewModel.favoriteSids.first()?.toLongArray())
         }
@@ -121,12 +132,30 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         binding.songsRv.layoutManager = LinearLayoutManager(requireContext())
         binding.songsRv.addOnScrollListener(scrollListener)
 
+        kuwoViewModel.songListId.postValue(-1)
+
+        songListAdapter = KuwoSongListsAdapter(songLists, songListItemClickListener)
+        binding.songListsRv.layoutManager = GridLayoutManager(requireContext(), 3)
+        binding.songListsRv.addItemDecoration(GridSpaceItemDecoration(4f.spToPx(requireContext()).toInt()))
+        binding.songListsRv.adapter = songListAdapter
+
+        @Suppress("DEPRECATION")
         if (savedInstanceState != null) {
-            val mySongs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                savedInstanceState.getParcelableArrayList("my_songs", Song::class.java)
-            } else @Suppress("DEPRECATION") savedInstanceState.getParcelableArrayList("my_songs")
             val myFavoriteIds = savedInstanceState.getLongArray("my_favorite_ids")?.toList()
             val myPage = savedInstanceState.getInt("my_favorite_ids", 1)
+            var mySongs: ArrayList<Song>? = arrayListOf()
+            var myBanners: ArrayList<Banner>? = arrayListOf()
+            var mySongLists: ArrayList<SongList>? = arrayListOf()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                mySongs = savedInstanceState.getParcelableArrayList("my_songs", Song::class.java)
+                myBanners = savedInstanceState.getParcelableArrayList("my_banners", Banner::class.java)
+                mySongLists = savedInstanceState.getParcelableArrayList("my_kuwo_song_lists", SongList::class.java)
+            } else {
+                mySongs = savedInstanceState.getParcelableArrayList("my_songs")
+                myBanners = savedInstanceState.getParcelableArrayList("my_banners")
+                mySongLists = savedInstanceState.getParcelableArrayList("my_kuwo_song_lists")
+            }
+
             PlayerManager.page = myPage
             if (mySongs != null) {
                 songs.clear()
@@ -136,22 +165,28 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             adapter.setFavoriteSongIds(myFavoriteIds)
             adapter.updateSongs(songs)
 
-            val myBanners = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                savedInstanceState.getParcelableArrayList("my_banners", Banner::class.java)
-            } else @Suppress("DEPRECATION") savedInstanceState.getParcelableArrayList("my_banners")
             if (myBanners != null) {
                 banners.clear()
                 banners.addAll(myBanners)
             }
-            bannerAdapter = MyBannerAdapter(banners, myBannerClickListener)
+            bannerAdapter = MyBannerAdapter(banners, songListItemClickListener)
             binding.banner.setAdapter(bannerAdapter, true)
                 .setViewTreeLifecycleOwner(viewLifecycleOwner)
+
+            if (mySongLists != null) {
+                songLists.clear()
+                songLists.addAll(mySongLists)
+            }
+            songListAdapter.updateSongLists(songLists)
+
         } else {
             PlayerManager.page = 1
             songViewModel.getFavoriteIds()
             songViewModel.getSongs(PlayerManager.page)
 
             kuwoViewModel.getBanners()
+            kuwoViewModel.getKuwoSongLists()
+
             binding.loading.visibility = View.VISIBLE
             lifecycleScope.launch {
                 DataStoreManager.updateTimerOpened(false)
@@ -171,10 +206,10 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         if (PlayerManager.isKuwoSource) {
             binding.loading.visibility = View.INVISIBLE
             binding.songsRv.visibility = View.INVISIBLE
-            binding.banner.visibility = View.VISIBLE
+            binding.kuwoSourceShowGroup.visibility = View.VISIBLE
             binding.refreshLayout.isRefreshing = false
         } else {
-            binding.banner.visibility = View.GONE
+            binding.kuwoSourceShowGroup.visibility = View.GONE
             binding.songsRv.visibility = View.VISIBLE
             songs.clear()
             setSongsHashMap(songs)
@@ -194,9 +229,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             if (DataStoreManager.isKuwoSelected.first().isTrue()) {
                 binding.loading.visibility = View.INVISIBLE
                 binding.songsRv.visibility = View.INVISIBLE
-                binding.banner.visibility = View.VISIBLE
+                binding.kuwoSourceShowGroup.visibility = View.VISIBLE
             } else {
-                binding.banner.visibility = View.GONE
+                binding.kuwoSourceShowGroup.visibility = View.GONE
                 binding.songsRv.visibility = View.VISIBLE
             }
         }
@@ -246,9 +281,18 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             kuwoViewModel.banners.collect {
                 banners.clear()
                 banners.addAll(it ?: emptyList())
-                bannerAdapter = MyBannerAdapter(banners, myBannerClickListener)
+                bannerAdapter = MyBannerAdapter(banners, songListItemClickListener)
                 binding.banner.setAdapter(bannerAdapter, true)
                     .setViewTreeLifecycleOwner(viewLifecycleOwner)
+            }
+        }
+
+        lifecycleScope.launch {
+            kuwoViewModel.kuwoSongLists.collect {
+                Log.e(TAG, "collectAndObserver: song lists=$it")
+                songLists.clear()
+                songLists.addAll(it ?: emptyList())
+                songListAdapter.updateSongLists(songLists)
             }
         }
     }

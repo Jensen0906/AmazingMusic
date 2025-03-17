@@ -3,6 +3,7 @@ package com.may.amazingmusic.repository
 import androidx.lifecycle.MutableLiveData
 import com.may.amazingmusic.bean.Banner
 import com.may.amazingmusic.bean.KuwoSong
+import com.may.amazingmusic.bean.SongList
 import com.may.amazingmusic.bean.SongListInfo
 import com.may.amazingmusic.constant.NetWorkConst
 import com.may.amazingmusic.utils.RetrofitService
@@ -86,6 +87,14 @@ class KuwoRepository {
         }.onFailure {
             it.printStackTrace()
             songListInfo.tryEmit(null)
+        }
+    }
+
+    suspend fun getSongLists(songLists: MutableSharedFlow<List<SongList>?>, page: Int = 1) {
+        runCatching {
+            songLists.tryEmit(kuwoApi.getSongLists(page = page).data)
+        }.onFailure {
+            it.printStackTrace()
         }
     }
 }
