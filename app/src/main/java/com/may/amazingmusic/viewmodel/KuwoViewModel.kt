@@ -1,5 +1,6 @@
 package com.may.amazingmusic.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,6 +17,7 @@ import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.orZero
 import com.may.amazingmusic.utils.player.PlayerManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
@@ -138,7 +140,8 @@ class KuwoViewModel : ViewModel() {
     )
 
     fun getBanners() {
-        viewModelScope.launch {
+        Log.e(TAG, "getBanners: ")
+        viewModelScope.launch(Dispatchers.IO) {
             repository.getBanners(banners)
         }
     }
@@ -166,7 +169,8 @@ class KuwoViewModel : ViewModel() {
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     fun getKuwoSongLists() {
-        viewModelScope.launch {
+        Log.e(TAG, "getKuwoSongLists: ")
+        viewModelScope.launch(Dispatchers.IO) {
             repository.getSongLists(kuwoSongLists, page = songListPage)
         }
     }

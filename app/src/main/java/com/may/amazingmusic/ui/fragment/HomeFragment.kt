@@ -186,14 +186,15 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             songListAdapter.updateSongLists(songLists)
 
         } else {
-            PlayerManager.page = 1
-            songViewModel.getFavoriteIds()
-            songViewModel.getSongs(PlayerManager.page)
-
-            kuwoViewModel.getBanners()
-            kuwoViewModel.getKuwoSongLists()
-
-            binding.loading.visibility = View.VISIBLE
+            refreshView()
+            binding.kuwoScrollView.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+                val totalHeight = binding.kuwoScrollView.getChildAt(0).height
+                val myHeight = binding.kuwoScrollView.height
+                Log.e(TAG, "initData: total=$totalHeight, scrollY=$scrollY, myHeight=$myHeight, page=kuwoViewModel.songListPage")
+                if (scrollY + myHeight >= totalHeight && kuwoViewModel.songListPage == 3) {
+                    binding.songListsRv.isNestedScrollingEnabled = true
+                }
+            }
             lifecycleScope.launch {
                 DataStoreManager.updateTimerOpened(false)
             }
@@ -210,12 +211,17 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
 
     fun refreshView() {
         if (PlayerManager.isKuwoSource) {
+            Log.e(TAG, "refreshView: isKuwoSource")
             binding.loading.visibility = View.INVISIBLE
             binding.songsRv.visibility = View.INVISIBLE
-            binding.kuwoSourceShowGroup.visibility = View.VISIBLE
+            binding.kuwoScrollView.visibility = View.VISIBLE
             binding.refreshLayout.isRefreshing = false
+
+            kuwoViewModel.getBanners()
+            kuwoViewModel.getKuwoSongLists()
         } else {
-            binding.kuwoSourceShowGroup.visibility = View.GONE
+            Log.e(TAG, "refreshView: not KuwoSource")
+            binding.kuwoScrollView.visibility = View.GONE
             binding.songsRv.visibility = View.VISIBLE
             songs.clear()
             setSongsHashMap(songs)
@@ -235,9 +241,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             if (DataStoreManager.isKuwoSelected.first().isTrue()) {
                 binding.loading.visibility = View.INVISIBLE
                 binding.songsRv.visibility = View.INVISIBLE
-                binding.kuwoSourceShowGroup.visibility = View.VISIBLE
+                binding.kuwoScrollView.visibility = View.VISIBLE
             } else {
-                binding.kuwoSourceShowGroup.visibility = View.GONE
+                binding.kuwoScrollView.visibility = View.GONE
                 binding.songsRv.visibility = View.VISIBLE
             }
         }
@@ -285,6 +291,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
 
         lifecycleScope.launch {
             kuwoViewModel.banners.collect {
+                Log.e(TAG, "collectAndObserver: banners=$it")
                 binding.bannerLoading.visibility = View.GONE
                 banners.clear()
                 banners.addAll(it ?: emptyList())
@@ -296,11 +303,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
 
         lifecycleScope.launch {
             kuwoViewModel.kuwoSongLists.collect {
+                Log.e(TAG, "collectAndObserver: kuwoSongLists=$it")
                 binding.songListLoading.visibility = View.GONE
                 if (it.isNullOrEmpty()) {
                     ToastyUtils.error("获取歌单失败")
                 } else {
-                    if (kuwoViewModel.songListPage <= 16) {
+                    if (kuwoViewModel.songListPage <= 20) {
                         songLists.addAll(it)
                     } else {
                         binding.songListsRv.removeOnScrollListener(scrollListener)
