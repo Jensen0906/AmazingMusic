@@ -1,10 +1,7 @@
 package com.may.amazingmusic.ui.fragment
 
 import android.os.Bundle
-import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -22,7 +19,6 @@ import com.may.amazingmusic.utils.convertToSong
 import com.may.amazingmusic.utils.orZero
 import com.may.amazingmusic.viewmodel.KuwoViewModel
 import com.may.amazingmusic.viewmodel.SongViewModel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
@@ -46,7 +42,6 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
             val lastPosition = lastChildView?.let { layoutManager.getPosition(it) }
 
             if (lastPosition == layoutManager?.itemCount.orZero() - 1) {
-                Log.e(TAG, "onScrolled: ")
                 getSongContinue()
             }
         }
@@ -96,7 +91,10 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
             kuwoViewModel.songListInfo.collect {
                 binding.loadingBar.visibility = View.GONE
                 if (it == null || it.musicList.isNullOrEmpty()) {
-                    ToastyUtils.error("获取歌曲失败")
+                    ToastyUtils.info("就这么多了")
+                    binding.songListRv.removeOnScrollListener(scrollListener)
+                    lockGetSongs = true
+                    kuwoSongAdapter.setLoading(false)
                 } else {
                     if (kuwoViewModel.songInListPage <= 1) {
                         kuwoSongs.clear()

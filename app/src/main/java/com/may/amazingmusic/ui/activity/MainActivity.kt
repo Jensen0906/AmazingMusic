@@ -235,7 +235,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private fun initDataAndObserver() {
         lifecycleScope.launch {
             songViewModel.addSongToPlay.collect {
-                Log.e(TAG, "initDataAndObserver: ")
                 it.firstNotNullOf { entry ->
                     Log.d(TAG, "addSongToPlay: song=${entry.key}, position=${entry.value}")
                     when (entry.value) {

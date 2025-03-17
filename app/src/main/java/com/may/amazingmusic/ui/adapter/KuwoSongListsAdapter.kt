@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.may.amazingmusic.App
 import com.may.amazingmusic.App.Companion.appContext
 import com.may.amazingmusic.bean.SongList
 import com.may.amazingmusic.databinding.ItemSearchFooterBinding
@@ -59,20 +58,21 @@ class KuwoSongListsAdapter(
                 .apply(globalGlideOptions(20f.spToPx(appContext).toInt()))
                 .into(holder.itemSongListsBinding.songListIv)
             holder.itemSongListsBinding.root.setOnClickListener { clickListener.itemClickListener(songList.rid) }
-        } else if (holder is KuwoSongAdapter.SongViewHolderFooter) {
+        } else if (holder is SongListViewHolderFooter) {
             holder.itemSearchFooterBinding.progressCircular.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
     }
 
     fun setLoading(loading: Boolean) {
         this.isLoading = loading
-        notifyItemChanged(songLists.size - 1)
+        notifyItemChanged(if (songLists.isEmpty()) 0 else songLists.size)
     }
 
 
-    fun updateSongLists(songLists: List<SongList>) {
+    fun updateSongLists(songLists: List<SongList>, addLast: Boolean = false) {
+        val last = this.songLists.size - 1
         this.songLists = songLists
-        notifyDataSetChanged()
+        if (addLast) notifyItemInserted(last) else notifyDataSetChanged()
     }
 
     class SongListViewHolder(val itemSongListsBinding: ItemSongListsBinding) :

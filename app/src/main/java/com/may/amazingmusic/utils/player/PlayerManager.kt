@@ -177,7 +177,6 @@ object PlayerManager {
     }
 
     fun clearPlaylist() {
-        Log.e(TAG, "clearPlaylist: ")
         player?.clearMediaItems()
         playlist.clear()
         playerListeners.forEach {

@@ -86,7 +86,7 @@ class KuwoSongAdapter(
 
     fun setLoading(loading: Boolean) {
         this.isLoading = loading
-        notifyItemChanged(songList.size - 1)
+        notifyItemChanged(if (songList.isEmpty()) 0 else songList.size)
     }
 
     fun updateFavoriteSong(rid: Long, position: Int, isFavorite: Boolean) {

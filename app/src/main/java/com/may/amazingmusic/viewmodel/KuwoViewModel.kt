@@ -1,6 +1,5 @@
 package com.may.amazingmusic.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -151,7 +150,6 @@ class KuwoViewModel : ViewModel() {
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     fun getSongListInfo() {
-        Log.e(TAG, "getSongListInfo: ")
         viewModelScope.launch {
             val id = songListId.value
             if (id == null || id < 0L) {

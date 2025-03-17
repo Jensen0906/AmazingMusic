@@ -30,6 +30,7 @@ import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.GridSpaceItemDecoration
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseFragment
+import com.may.amazingmusic.utils.isFalse
 import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.orZero
 import com.may.amazingmusic.utils.player.PlayerManager
@@ -69,11 +70,16 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             val recyclerBottom = recyclerView.bottom - recyclerView.paddingBottom
             val lastPosition = lastChildView?.let { layoutManager.getPosition(it) }
 
-            if (lastChildBottom == recyclerBottom && lastPosition == layoutManager.itemCount - 1) {
+            if (PlayerManager.isKuwoSource.isFalse() && lastChildBottom == recyclerBottom && lastPosition == layoutManager.itemCount - 1) {
                 getSongsContinue()
+            }
+
+            if (PlayerManager.isKuwoSource.isTrue() && lastPosition == layoutManager?.itemCount.orZero() - 1) {
+                getSongListsContinue()
             }
         }
     }
+
     private val songListItemClickListener = object : SongListClickListener {
         override fun itemClickListener(songListId: Long) {
             kuwoViewModel.songListId.postValue(songListId)
@@ -279,6 +285,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
 
         lifecycleScope.launch {
             kuwoViewModel.banners.collect {
+                binding.bannerLoading.visibility = View.GONE
                 banners.clear()
                 banners.addAll(it ?: emptyList())
                 bannerAdapter = MyBannerAdapter(banners, songListItemClickListener)
@@ -289,10 +296,23 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
 
         lifecycleScope.launch {
             kuwoViewModel.kuwoSongLists.collect {
-                Log.e(TAG, "collectAndObserver: song lists=$it")
-                songLists.clear()
-                songLists.addAll(it ?: emptyList())
-                songListAdapter.updateSongLists(songLists)
+                binding.songListLoading.visibility = View.GONE
+                if (it.isNullOrEmpty()) {
+                    ToastyUtils.error("获取歌单失败")
+                } else {
+                    if (kuwoViewModel.songListPage <= 16) {
+                        songLists.addAll(it)
+                    } else {
+                        binding.songListsRv.removeOnScrollListener(scrollListener)
+                        lockGetSongLists = true
+                        songListAdapter.setLoading(false)
+                        return@collect
+                    }
+                    kuwoViewModel.songListPage++
+                    binding.songListsRv.addOnScrollListener(scrollListener)
+                    lockGetSongLists = false
+                    songListAdapter.updateSongLists(songLists, true)
+                }
             }
         }
     }
@@ -310,6 +330,14 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         }
         songs.forEachIndexed { index, song ->
             songsMap.putIfAbsent(song.sid, index)
+        }
+    }
+
+    private var lockGetSongLists = true
+    private fun getSongListsContinue() {
+        if (!lockGetSongLists) {
+            kuwoViewModel.getKuwoSongLists()
+            lockGetSongLists = true
         }
     }
 
