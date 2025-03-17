@@ -190,7 +190,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             binding.kuwoScrollView.setOnScrollChangeListener { _, _, scrollY, _, _ ->
                 val totalHeight = binding.kuwoScrollView.getChildAt(0).height
                 val myHeight = binding.kuwoScrollView.height
-                Log.e(TAG, "initData: total=$totalHeight, scrollY=$scrollY, myHeight=$myHeight, page=kuwoViewModel.songListPage")
+
                 if (scrollY + myHeight >= totalHeight && kuwoViewModel.songListPage == 3) {
                     binding.songListsRv.isNestedScrollingEnabled = true
                 }
