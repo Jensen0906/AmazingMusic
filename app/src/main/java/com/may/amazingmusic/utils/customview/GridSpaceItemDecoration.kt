@@ -1,4 +1,4 @@
-package com.may.amazingmusic.utils
+package com.may.amazingmusic.utils.customview
 
 import android.graphics.Rect
 import android.view.View

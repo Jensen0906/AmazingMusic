@@ -34,7 +34,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <ScrollView
+        <com.may.amazingmusic.utils.customview.MyScrollView
             android:id="@+id/kuwo_scroll_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
@@ -65,8 +65,7 @@
                 <TextView
                     android:id="@+id/song_lists_tv"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
+                    android:layout_height="20dp"
                     android:layout_marginTop="2dp"
                     android:text="推荐歌单"
                     android:textColor="@color/black"
@@ -75,13 +74,12 @@
                     app:layout_constraintStart_toStartOf="@+id/banner"
                     app:layout_constraintTop_toBottomOf="@+id/banner" />
 
-                <androidx.recyclerview.widget.RecyclerView
+                <com.may.amazingmusic.utils.customview.MyRecyclerView
                     android:id="@+id/song_lists_rv"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:paddingBottom="2dp"
-                    android:nestedScrollingEnabled="false"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -97,6 +95,6 @@
                     app:layout_constraintTop_toTopOf="@+id/song_lists_rv" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
-        </ScrollView>
+        </com.may.amazingmusic.utils.customview.MyScrollView>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

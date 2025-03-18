@@ -39,6 +39,19 @@ class SongList() : Parcelable {
         return "SongList(rid=$rid, name=$name, total=$total, pic=$pic, list=$list)"
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as SongList
+
+        return rid == other.rid
+    }
+
+    override fun hashCode(): Int {
+        return rid.hashCode()
+    }
+
     companion object CREATOR : Parcelable.Creator<SongList> {
         override fun createFromParcel(parcel: Parcel): SongList {
             return SongList(parcel)
@@ -48,4 +61,6 @@ class SongList() : Parcelable {
             return arrayOfNulls(size)
         }
     }
+
+
 }
