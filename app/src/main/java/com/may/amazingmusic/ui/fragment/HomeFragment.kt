@@ -144,6 +144,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         binding.refreshLayout.setOnRefreshListener {
             refreshView()
         }
+        binding.kuwoRefresh.setOnRefreshListener {
+            refreshView()
+        }
         binding.songsRv.removeOnScrollListener(scrollListener)
         binding.songsRv.addOnScrollListener(scrollListener)
     }
@@ -152,6 +155,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         if (PlayerManager.isKuwoSource) {
             binding.loading.visibility = View.INVISIBLE
             binding.songsRv.visibility = View.INVISIBLE
+            binding.kuwoRefresh.visibility = View.VISIBLE
             binding.kuwoScrollView.visibility = View.VISIBLE
             binding.bannerLoading.visibility = View.VISIBLE
             binding.songListLoading.visibility = View.VISIBLE
@@ -165,8 +169,10 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             Log.e(TAG, "refreshView: getKuwoSongLists")
             kuwoViewModel.getKuwoSongLists()
         } else {
+            binding.kuwoRefresh.visibility = View.GONE
             binding.kuwoScrollView.visibility = View.GONE
             binding.songsRv.visibility = View.VISIBLE
+            binding.kuwoRefresh.isRefreshing = false
             songs.clear()
             setSongsHashMap(songs)
             adapter.updateSongs(emptyList())
@@ -247,6 +253,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         lifecycleScope.launch {
             kuwoViewModel.kuwoSongLists.collect {
                 binding.songListLoading.visibility = View.GONE
+                binding.kuwoRefresh.isRefreshing = false
                 Log.e(TAG, "collectAndObserver: song list=$it")
                 if (it.isNullOrEmpty()) {
                     ToastyUtils.error("获取歌单失败")
