@@ -35,7 +35,7 @@ class MyBannerAdapter(bannerList: List<Banner?>, private val bannerListener: Son
 
     override fun onBindView(holder: BannerViewHolder, banner: Banner, position: Int, size: Int) {
         Glide.with(appContext).load(banner.pic).apply(globalGlideOptions(50)).into(holder.imageView)
-        holder.imageView.setOnClickListener { bannerListener.itemClickListener(banner.id) }
+        holder.imageView.setOnClickListener { bannerListener.itemClickListener(banner.id, banner.pic, "") }
     }
 
     class BannerViewHolder(var imageView: ImageView) : RecyclerView.ViewHolder(imageView)

@@ -11,4 +11,5 @@
     <color name="thumb_color">#6B8CFF</color>
     <color name="track_color">#CDDAFF</color>
     <color name="song_list_bg">#E2E7FF</color>
+    <color name="song_list_bg_color">#4AFFFFFF</color>
 </resources>

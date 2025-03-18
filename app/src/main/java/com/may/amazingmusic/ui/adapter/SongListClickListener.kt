@@ -5,5 +5,5 @@ package com.may.amazingmusic.ui.adapter
  * @Date 2025/3/16 13:08
  */
 interface SongListClickListener {
-    fun itemClickListener(songListId: Long)
+    fun itemClickListener(songListId: Long, songListPic: String?, songListName: String?)
 }

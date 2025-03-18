@@ -57,7 +57,7 @@ class KuwoSongListsAdapter(
                 .load(songList.pic)
                 .apply(globalGlideOptions(20f.spToPx(appContext).toInt()))
                 .into(holder.itemSongListsBinding.songListIv)
-            holder.itemSongListsBinding.root.setOnClickListener { clickListener.itemClickListener(songList.rid) }
+            holder.itemSongListsBinding.root.setOnClickListener { clickListener.itemClickListener(songList.rid, songList.pic, songList.name) }
         } else if (holder is SongListViewHolderFooter) {
             holder.itemSearchFooterBinding.progressCircular.visibility = if (isLoading) View.VISIBLE else View.GONE
         }

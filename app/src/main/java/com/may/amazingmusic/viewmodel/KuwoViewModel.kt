@@ -142,7 +142,7 @@ class KuwoViewModel : ViewModel() {
         }
     }
 
-    val songListId = MutableLiveData(-1L)
+    val songList = MutableLiveData<SongList?>()
     val songListInfo = MutableSharedFlow<SongListInfo?>(
         replay = 0,
         extraBufferCapacity = 1,
@@ -150,7 +150,7 @@ class KuwoViewModel : ViewModel() {
     )
     fun getSongListInfo() {
         viewModelScope.launch {
-            val id = songListId.value
+            val id = songList.value?.rid
             if (id == null || id < 0L) {
                 songListInfo.tryEmit(null)
                 return@launch

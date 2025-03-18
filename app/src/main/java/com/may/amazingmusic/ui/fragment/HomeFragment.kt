@@ -14,7 +14,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.may.amazingmusic.R
 import com.may.amazingmusic.bean.Banner
 import com.may.amazingmusic.bean.Song
@@ -27,9 +26,9 @@ import com.may.amazingmusic.ui.adapter.SongListClickListener
 import com.may.amazingmusic.ui.adapter.SongsAdapter
 import com.may.amazingmusic.ui.adapter.SongsItemClickListener
 import com.may.amazingmusic.utils.DataStoreManager
-import com.may.amazingmusic.utils.customview.GridSpaceItemDecoration
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseFragment
+import com.may.amazingmusic.utils.customview.GridSpaceItemDecoration
 import com.may.amazingmusic.utils.isFalse
 import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.orZero
@@ -81,8 +80,12 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
     }
 
     private val songListItemClickListener = object : SongListClickListener {
-        override fun itemClickListener(songListId: Long) {
-            kuwoViewModel.songListId.postValue(songListId)
+        override fun itemClickListener(songListId: Long, songListPic: String?, songListName: String?) {
+            kuwoViewModel.songList.postValue(SongList().apply {
+                rid = songListId
+                pic = songListPic
+                name = songListName
+            })
         }
     }
 
@@ -126,7 +129,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         binding.songsRv.layoutManager = LinearLayoutManager(requireContext())
         binding.songsRv.addOnScrollListener(scrollListener)
 
-        kuwoViewModel.songListId.postValue(-1)
+        kuwoViewModel.songList.postValue(null)
 
         songListAdapter = KuwoSongListsAdapter(songLists, songListItemClickListener, false)
         binding.songListsRv.init(binding.kuwoScrollView, resources.displayMetrics.heightPixels - 180f.spToPx(requireContext()))

@@ -50,11 +50,7 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initData()
-    }
-
-    override fun onResume() {
         kuwoSongAdapter.updateSongs(emptyList())
-        super.onResume()
         collectsAndObserves()
         (requireActivity() as MainActivity).songListFragmentAlive = true
     }
@@ -128,7 +124,11 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
         }
         lifecycleScope.launch {
             kuwoViewModel.operateFavoriteSong.collect {
-                kuwoSongAdapter.updateFavoriteSong(it.first, position = it.second, isFavorite = it.third)
+                kuwoSongAdapter.updateFavoriteSong(
+                    it.first,
+                    position = it.second,
+                    isFavorite = it.third
+                )
             }
         }
     }
@@ -147,6 +147,7 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
         super.onDestroy()
         (requireActivity() as MainActivity).songListFragmentAlive = false
     }
+
     override fun setDataBinding(): FragmentSongListBinding {
         return FragmentSongListBinding.inflate(layoutInflater)
     }

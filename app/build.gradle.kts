@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     // glide
     implementation(libs.glide)
+    implementation(libs.glide.transformations)
     // toast
     implementation(libs.toasty)
     // lrc display

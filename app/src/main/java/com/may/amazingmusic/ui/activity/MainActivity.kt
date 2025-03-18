@@ -28,6 +28,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.may.amazingmusic.R
 import com.may.amazingmusic.bean.Song
 import com.may.amazingmusic.constant.BaseWorkConst.ADD_LIST_AND_PLAY
@@ -58,8 +59,10 @@ import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.orZero
 import com.may.amazingmusic.utils.player.PlayerListener
 import com.may.amazingmusic.utils.player.PlayerManager
+import com.may.amazingmusic.utils.spToPx
 import com.may.amazingmusic.viewmodel.KuwoViewModel
 import com.may.amazingmusic.viewmodel.SongViewModel
+import jp.wasabeef.glide.transformations.BlurTransformation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -231,6 +234,15 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         Glide.with(this@MainActivity).load(PlayerManager.player?.mediaMetadata?.artworkData)
             .apply(globalGlideOptions(50)).into(binding.displayPlayerIv)
         PlayerManager.playerListeners.add(playerListener)
+
+        val toolbarHeight = binding.toolbar.layoutParams.height
+        Log.e(TAG, "initViewAndAdapter: toolbarHeight=$toolbarHeight")
+
+        val params = binding.songListPic.layoutParams
+        val newH = binding.toolbar.layoutParams.height.orZero() + 119f.spToPx(this).toInt()
+        params.height = newH
+        binding.songListPic.layoutParams = params
+        binding.songListGroup.visibility = View.GONE
     }
 
     private fun initDataAndObserver() {
@@ -274,9 +286,15 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             homeFragment.refreshView()
             PlayerManager.clearPlaylist()
         }
-        kuwoViewModel.songListId.observe(this) {
-            if (currentFragment is HomeFragment && it >= 0)
+        kuwoViewModel.songList.observe(this) {
+            if (currentFragment is HomeFragment && (it?.rid ?: -1) >= 0) {
                 switchFragment(songListFragment)
+                binding.songListGroup.visibility = View.VISIBLE
+            }
+            Glide.with(this).load(it?.pic)
+                .apply(RequestOptions.bitmapTransform(BlurTransformation(10)))
+                .into(binding.songListPic)
+            binding.songListNameTv.text = it?.name ?: "AmazingMusic"
         }
     }
 
@@ -455,7 +473,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     private suspend fun justPlayFirstSong(song: Song) {
         Log.d(TAG, "justPlayFirstSong: song=${song.title}")
-//        PlayerManager.clearPlaylist()
         val intent = Intent(this, PlayService::class.java)
 
         if (isPlayServiceBinding.isTrue() && PlayerManager.player == null) unbindService(
@@ -616,7 +633,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         if (currentFragment is SearchFragment) {
             searchFragment.clearAdapterView()
         }
-
         currentFragment = fragment
 
         binding.searchIv.visibility =
@@ -626,6 +642,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             if (currentFragment is MineFragment) View.VISIBLE else View.GONE
         binding.playAllBtn.visibility =
             if (currentFragment is FavoriteFragment) View.VISIBLE else View.GONE
+        binding.songListGroup.visibility = if (currentFragment is SongListFragment) View.VISIBLE else View.GONE
     }
 
     private suspend fun loadImageToByteArray(coverUrl: String?): ByteArray? {
