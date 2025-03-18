@@ -131,7 +131,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         songListAdapter = KuwoSongListsAdapter(songLists, songListItemClickListener, false)
         binding.songListsRv.init(binding.kuwoScrollView, resources.displayMetrics.heightPixels - 180f.spToPx(requireContext()))
         binding.songListsRv.layoutManager = GridLayoutManager(requireContext(), 3)
-        binding.songListsRv.addItemDecoration(GridSpaceItemDecoration(4f.spToPx(requireContext()).toInt()))
+        binding.songListsRv.addItemDecoration(GridSpaceItemDecoration(10f.spToPx(requireContext()).toInt()))
         binding.songListsRv.adapter = songListAdapter
 
         refreshView()
