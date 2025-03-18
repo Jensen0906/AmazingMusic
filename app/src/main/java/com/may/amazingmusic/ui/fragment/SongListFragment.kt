@@ -109,7 +109,7 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
                         }
                     }
                     kuwoViewModel.songInListPage++
-                    if (kuwoViewModel.songInListPage > 20) {
+                    if (kuwoViewModel.songInListPage > 40) {
                         binding.songListRv.removeOnScrollListener(scrollListener)
                         lockGetSongs = true
                         kuwoSongAdapter.setLoading(false)
@@ -124,6 +124,11 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
             kuwoViewModel.myKuwoSongRids.collect {
                 kuwoSongAdapter.setFavoriteKuwoSongRids(it)
                 kuwoSongAdapter.updateSongs(kuwoSongs)
+            }
+        }
+        lifecycleScope.launch {
+            kuwoViewModel.operateFavoriteSong.collect {
+                kuwoSongAdapter.updateFavoriteSong(it.first, position = it.second, isFavorite = it.third)
             }
         }
     }

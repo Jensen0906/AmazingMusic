@@ -32,6 +32,9 @@ import okhttp3.RequestBody.Companion.toRequestBody
 class KuwoViewModel : ViewModel() {
     private val TAG = this.javaClass.simpleName
 
+    private val repository = KuwoRepository()
+    private var keyword = ""
+
     var songInListPage = 1
     var songListPage = 1
 
@@ -127,12 +130,6 @@ class KuwoViewModel : ViewModel() {
         }
     }
 
-    val operateFavoriteSong = MutableSharedFlow<Triple<Long, Int, Boolean>>(
-        replay = 0,
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
-
     val banners = MutableSharedFlow<List<Banner>?>(
         replay = 0,
         extraBufferCapacity = 1,
@@ -174,9 +171,11 @@ class KuwoViewModel : ViewModel() {
         }
     }
 
-
-    private val repository = KuwoRepository()
-    private var keyword = ""
+    val operateFavoriteSong = MutableSharedFlow<Triple<Long, Int, Boolean>>(
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     private fun operateKuwoSongIds(rid: Long, position: Int, isFavorite: Boolean = false) {
         operateFavoriteSong.tryEmit(Triple(rid, position, isFavorite))
     }
