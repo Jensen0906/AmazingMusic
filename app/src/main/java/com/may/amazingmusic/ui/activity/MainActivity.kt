@@ -228,7 +228,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         playlistBinding.playlistRv.layoutManager = LinearLayoutManager(this)
 
         binding.playIv.setImageResource(if (PlayerManager.player?.isPlaying.isTrue()) R.drawable.icon_pause else R.drawable.icon_play)
-
+        Glide.with(this@MainActivity).load(PlayerManager.player?.mediaMetadata?.artworkData)
+            .apply(globalGlideOptions(50)).into(binding.displayPlayerIv)
         PlayerManager.playerListeners.add(playerListener)
     }
 
