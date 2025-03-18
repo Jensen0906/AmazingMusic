@@ -1,7 +1,6 @@
 package com.may.amazingmusic.utils.player
 
 import android.content.Context
-import android.util.Log
 import androidx.annotation.OptIn
 import androidx.lifecycle.MutableLiveData
 import androidx.media3.common.MediaItem
@@ -199,15 +198,6 @@ object PlayerManager {
 
     fun addAnalyticsListenerForTest() {
         player?.addAnalyticsListener(object : AnalyticsListener {
-            override fun onBandwidthEstimate(
-                eventTime: AnalyticsListener.EventTime,
-                totalLoadTimeMs: Int,
-                totalBytesLoaded: Long,
-                bitrateEstimate: Long
-            ) {
-                Log.d(TAG, "TotalBytesLoaded: $totalBytesLoaded, Bitrate: $bitrateEstimate")
-                super.onBandwidthEstimate(eventTime, totalLoadTimeMs, totalBytesLoaded, bitrateEstimate)
-            }
         })
     }
 

@@ -2,7 +2,6 @@ package com.may.amazingmusic.ui.fragment
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -93,7 +92,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>() {
     }
 
     fun clearAdapterView() {
-        Log.d(TAG, "clearAdapterView: ")
         songs.clear()
         adapter.updateSongs(songs)
     }

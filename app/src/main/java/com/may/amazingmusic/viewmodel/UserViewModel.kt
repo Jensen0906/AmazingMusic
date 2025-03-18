@@ -1,7 +1,6 @@
 package com.may.amazingmusic.viewmodel
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -28,7 +27,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
  */
 @SuppressLint("CheckResult")
 class UserViewModel : ViewModel() {
-    private val TAG = "UserViewModel";
+    private val TAG = "UserViewModel"
     private var _user = MutableLiveData<User?>()
     val userLiveData: LiveData<User?> = _user
 
@@ -43,7 +42,6 @@ class UserViewModel : ViewModel() {
 
         val requestBody =
             Gson().toJson(user.makePassowrdEncode()).toRequestBody(CONTENT_TYPE.toMediaTypeOrNull())
-        Log.d(TAG, "login: requestBody: $requestBody, user: $user, userEncode: ${user.makePassowrdEncode()}")
         viewModelScope.launch {
             repository.login(_user, requestBody)
         }

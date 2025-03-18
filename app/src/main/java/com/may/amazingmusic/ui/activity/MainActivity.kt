@@ -235,9 +235,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             .apply(globalGlideOptions(50)).into(binding.displayPlayerIv)
         PlayerManager.playerListeners.add(playerListener)
 
-        val toolbarHeight = binding.toolbar.layoutParams.height
-        Log.e(TAG, "initViewAndAdapter: toolbarHeight=$toolbarHeight")
-
         val params = binding.songListPic.layoutParams
         val newH = binding.toolbar.layoutParams.height.orZero() + 119f.spToPx(this).toInt()
         params.height = newH
@@ -674,7 +671,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 } else if (currentFragment != homeFragment) {
                     switchFragment(homeFragment)
                 } else {
-                    Log.d(TAG, "onKeyUp: go home")
                     Intent(Intent.ACTION_MAIN).apply {
                         addCategory(Intent.CATEGORY_HOME)
                     }.let {

@@ -1,7 +1,6 @@
 package com.may.amazingmusic.ui.fragment
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -109,7 +108,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
     private fun initData() {
         adapter = SongsAdapter(songs, object : SongsItemClickListener {
             override fun itemClickListener(song: Song) {
-                Log.d(TAG, "itemClickListener: ")
                 songViewModel.addSongToPlaylist(song, true)
             }
 
@@ -167,9 +165,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             binding.songListsRv.addOnScrollListener(scrollListener)
 
             songLists.clear()
+            songListAdapter.updateSongLists(songLists)
             kuwoViewModel.getBanners()
             kuwoViewModel.songListPage = 1
-            Log.e(TAG, "refreshView: getKuwoSongLists")
             kuwoViewModel.getKuwoSongLists()
         } else {
             binding.kuwoRefresh.visibility = View.GONE
@@ -257,12 +255,15 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
             kuwoViewModel.kuwoSongLists.collect {
                 binding.songListLoading.visibility = View.GONE
                 binding.kuwoRefresh.isRefreshing = false
-                Log.e(TAG, "collectAndObserver: song list=$it")
                 if (it.isNullOrEmpty()) {
                     ToastyUtils.error("获取歌单失败")
                 } else {
                     if (kuwoViewModel.songListPage <= 20) {
-                        songLists.addAll(it)
+                        if (songLists.isNotEmpty() && it[0] == songLists[0]) {
+                            return@collect
+                        } else {
+                            songLists.addAll(it)
+                        }
                     } else {
                         binding.songListsRv.removeOnScrollListener(scrollListener)
                         lockGetSongLists = true

@@ -12,7 +12,6 @@ import android.graphics.Bitmap
 import android.media.AudioManager
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
 import android.view.KeyEvent
 import androidx.core.app.NotificationCompat
 import androidx.media3.common.util.UnstableApi
@@ -48,7 +47,6 @@ class PlayService : Service() {
     private var bitmap = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888)
 
     override fun onBind(intent: Intent?): IBinder? {
-        Log.d(TAG, "onBind: ")
         player = PlayerManager.player ?: ExoPlayer.Builder(this).build().apply {
             repeatMode = if (PlayerManager.repeatModeLiveData.value == REPEAT_MODE_SINGLE) ExoPlayer.REPEAT_MODE_ONE
             else ExoPlayer.REPEAT_MODE_ALL
@@ -67,7 +65,6 @@ class PlayService : Service() {
                     val keyEvent = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
                         intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT, KeyEvent::class.java)
                     } else @Suppress("DEPRECATION") intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT)
-                    Log.d(TAG, "onReceive: keycode=${keyEvent?.keyCode}")
                     if (keyEvent?.keyCode == KeyEvent.KEYCODE_MEDIA_PREVIOUS) {
                         PlayerManager.playPreviousSong()
                         return true
@@ -91,7 +88,6 @@ class PlayService : Service() {
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
-        Log.d(TAG, "onUnbind: ")
         PlayerManager.release()
         if (!bitmap.isRecycled) {
             bitmap.recycle()

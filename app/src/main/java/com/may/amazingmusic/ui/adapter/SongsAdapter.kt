@@ -1,6 +1,5 @@
 package com.may.amazingmusic.ui.adapter
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -61,7 +60,6 @@ class SongsAdapter(private var songList: List<Song>, private val clickListener: 
     private var favIds: List<Long> = listOf()
     var hasSetFavorite = false
     fun setFavoriteSongIds(favoriteIds: List<Long>?) {
-        Log.d(TAG, "setFavoriteSongIds: favoriteIds=$favoriteIds")
         if (favoriteIds.isNullOrEmpty()) this.favIds = emptyList()
         else this.favIds = favoriteIds
         hasSetFavorite = true
@@ -84,7 +82,6 @@ class SongsAdapter(private var songList: List<Song>, private val clickListener: 
     }
 
     fun updateFavoriteSong(sid: Long, position: Int, isFavorite: Boolean) {
-        Log.d(TAG, "updateFavoriteSong: sid=$sid, isFavorite=$isFavorite, itemCount=$itemCount")
         if (position >= itemCount) return
         val mutableListFavIds = favIds.toMutableList()
         if (isFavorite) mutableListFavIds.add(sid)

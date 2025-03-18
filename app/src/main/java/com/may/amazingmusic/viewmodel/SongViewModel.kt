@@ -45,7 +45,6 @@ class SongViewModel : ViewModel() {
     )
 
     fun getSongs(page: Int) {
-        Log.d(TAG, "getSongs: page=$page")
         checkGetSongs = true
         if (page < 1) {
             return
@@ -61,7 +60,6 @@ class SongViewModel : ViewModel() {
     fun getFavoriteSongs() {
         viewModelScope.launch {
             val uid = DataStoreManager.userIDFlow.first().orZero()
-            Log.d(TAG, "getFavoriteSongs: uid=$uid")
             if (uid > 0) {
                 val requestBody =
                     Gson().toJson(User().apply { this.uid = uid }).toRequestBody(CONTENT_TYPE.toMediaTypeOrNull())
@@ -80,7 +78,6 @@ class SongViewModel : ViewModel() {
     )
     fun addSongToPlaylist(song: Song, playNow: Boolean = false) {
         val position = PlayerManager.playlist.indexOfFirst { it.sid == song.sid }
-        Log.d(TAG, "addSongToPlaylist: position=$position, play now=$playNow")
         if (playNow) {
             if (position < 0) addSongToPlay.tryEmit(mapOf(Pair(song, ADD_LIST_AND_PLAY)))
             else addSongToPlay.tryEmit(mapOf(Pair(song, position)))
@@ -92,14 +89,12 @@ class SongViewModel : ViewModel() {
     fun operateFavorite(song: Song, position: Int) {
         viewModelScope.launch {
             val uid = DataStoreManager.userIDFlow.first()
-            Log.d(TAG, "operateFavorite: uid=$uid")
             if (uid == null) {
                 return@launch
             }
             val requestBody =
                 Gson().toJson(Favorite(uid, song.sid)).toRequestBody(CONTENT_TYPE.toMediaTypeOrNull())
             val ops = repository.operateFavorite(requestBody)
-            Log.d(TAG, "operateFavorite: ops === $ops, position === $position")
             if (ops) {
                 song.isFavorite = !song.isFavorite
                 ToastyUtils.success(if (song.isFavorite) "收藏成功" else "取消收藏")

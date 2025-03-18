@@ -1,7 +1,6 @@
 package com.may.amazingmusic.ui.fragment
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -35,7 +34,6 @@ class FeedbackFragment : BaseFragment<FragmentFeedbackBinding>() {
                 }
                 binding.feedbackProgressBar.visibility = View.GONE
                 binding.feedbackBtn.isEnabled = true
-                Log.d(TAG, "onViewCreated: feedbackResult = $it")
                 if (it.orZero() == 0) ToastyUtils.error("反馈失败！！")
                 else {
                     ToastyUtils.success("~反馈成功~")
