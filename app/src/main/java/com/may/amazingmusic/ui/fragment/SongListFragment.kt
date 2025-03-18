@@ -17,6 +17,8 @@ import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseFragment
 import com.may.amazingmusic.utils.convertToSong
 import com.may.amazingmusic.utils.orZero
+import com.may.amazingmusic.utils.player.PlayerListener
+import com.may.amazingmusic.utils.player.PlayerManager
 import com.may.amazingmusic.viewmodel.KuwoViewModel
 import com.may.amazingmusic.viewmodel.SongViewModel
 import kotlinx.coroutines.launch
@@ -47,6 +49,13 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
         }
     }
 
+    private val playerListener = object : PlayerListener {
+        override fun onIsPlayingChanged(isPlaying: Boolean, title: String?) {
+            super.onIsPlayingChanged(isPlaying, title)
+            binding.loadingBar.visibility = View.GONE
+        }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initData()
@@ -60,9 +69,12 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
         kuwoViewModel = ViewModelProvider(requireActivity())[KuwoViewModel::class.java]
         kuwoViewModel.songInListPage = 1
 
+        PlayerManager.playerListeners.add(playerListener)
         kuwoSongAdapter = KuwoSongAdapter(kuwoSongs, object : KuwoSongClickListener {
             override fun itemClickListener(song: KuwoSong) {
+                binding.loadingBar.visibility = View.VISIBLE
                 songViewModel.addSongToPlaylist(song.convertToSong(), true)
+                songViewModel.addAllSongsToPlaylist(true, song)
             }
 
             override fun addSongToList(song: KuwoSong) {
@@ -94,6 +106,7 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
                 } else {
                     if (kuwoViewModel.songInListPage <= 1) {
                         kuwoSongs.clear()
+                        songViewModel.songInList.clear()
                         kuwoSongs.addAll(it.musicList!!)
                         if (kuwoSongAdapter.hasSetFavorite) {
                             kuwoSongAdapter.updateSongs(kuwoSongs)
@@ -103,6 +116,9 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
                         if (kuwoSongAdapter.hasSetFavorite) {
                             kuwoSongAdapter.updateSongs(kuwoSongs, true)
                         }
+                    }
+                    it.musicList?.forEach { kuwoSong ->
+                        songViewModel.songInList.add(kuwoSong.convertToSong())
                     }
                     kuwoViewModel.songInListPage++
                     if (kuwoViewModel.songInListPage > 40) {
@@ -145,6 +161,7 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
 
     override fun onDestroy() {
         super.onDestroy()
+        PlayerManager.playerListeners.remove(playerListener)
         (requireActivity() as MainActivity).songListFragmentAlive = false
     }
 

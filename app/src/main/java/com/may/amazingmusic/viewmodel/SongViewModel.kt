@@ -8,6 +8,7 @@ import com.google.gson.Gson
 import com.may.amazingmusic.App.Companion.appContext
 import com.may.amazingmusic.R
 import com.may.amazingmusic.bean.Favorite
+import com.may.amazingmusic.bean.KuwoSong
 import com.may.amazingmusic.bean.Song
 import com.may.amazingmusic.bean.User
 import com.may.amazingmusic.constant.BaseWorkConst.ADD_LIST_AND_PLAY
@@ -140,8 +141,10 @@ class SongViewModel : ViewModel() {
         }
     }
 
-    fun addAllSongsToPlaylist() {
-        val songs = favoriteSongs.value
+
+    val songInList = mutableListOf<Song>()
+    fun addAllSongsToPlaylist(playSongList: Boolean = false, kuwoSong: KuwoSong? = null) {
+        val songs = if (playSongList) songInList else favoriteSongs.value
         if (songs.isNullOrEmpty()) {
             ToastyUtils.error(appContext.getString(R.string.no_favorite_song))
             return
@@ -149,7 +152,7 @@ class SongViewModel : ViewModel() {
         PlayerManager.clearPlaylist()
         songs.forEachIndexed { index, song ->
             Log.i(TAG, "addAllSongsToPlaylist: index=$index, song=${song.title}")
-            addSongToPlay.tryEmit(mapOf(Pair(song, ADD_LIST_LAST)))
+            if (kuwoSong?.rid != song.sid) addSongToPlay.tryEmit(mapOf(Pair(song, ADD_LIST_LAST)))
         }
         PlayerManager.playAsRepeatMode()
     }
