@@ -489,9 +489,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         if (PlayerManager.player == null) {
             val dataSourceFactory = PlayerManager.buildCacheDataSourceFactory(this)
-            PlayerManager.player = ExoPlayer.Builder(this)
-                .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
-                .build()
+            PlayerManager.player = if (PlayerManager.isKuwoSource) {
+                ExoPlayer.Builder(this).build()
+            } else {
+                ExoPlayer.Builder(this)
+                    .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+                    .build()
+            }
 
             PlayerManager.setPlayerListener()
             PlayerManager.addAnalyticsListenerForTest()

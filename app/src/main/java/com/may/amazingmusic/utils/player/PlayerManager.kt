@@ -128,14 +128,13 @@ object PlayerManager {
     }
 
     fun buildCacheDataSourceFactory(context: Context): DataSource.Factory {
-        val okHttpClient = OkHttpClient() // 用于网络数据请求
+        val okHttpClient = OkHttpClient()
         val okHttpDataSourceFactory = OkHttpDataSource.Factory(okHttpClient)
 
-        // 包装缓存的数据源工厂
         return CacheDataSource.Factory()
             .setCache(getCache(context))
-            .setUpstreamDataSourceFactory(okHttpDataSourceFactory) // 上游网络数据源
-            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR) // 出错时忽略缓存
+            .setUpstreamDataSourceFactory(okHttpDataSourceFactory)
+            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
     }
 
     fun changePlayMode() {
@@ -189,7 +188,7 @@ object PlayerManager {
     private var simpleCache: SimpleCache? = null
     private fun getCache(context: Context): SimpleCache {
         if (simpleCache == null) {
-            val cacheDir = File(context.cacheDir, "music_cache")
+            val cacheDir = File(context.filesDir, "music_cache_file")
             val cacheEvictor = LeastRecentlyUsedCacheEvictor(200L * 1024 * 1024) // 100MB 缓存
             val databaseProvider = StandaloneDatabaseProvider(context)
 
