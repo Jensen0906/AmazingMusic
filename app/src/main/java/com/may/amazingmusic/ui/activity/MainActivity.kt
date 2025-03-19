@@ -53,9 +53,9 @@ import com.may.amazingmusic.ui.fragment.SongListFragment
 import com.may.amazingmusic.utils.DataStoreManager
 import com.may.amazingmusic.utils.ToastyUtils
 import com.may.amazingmusic.utils.base.BaseActivity
-import com.may.amazingmusic.utils.globalGlideOptions
 import com.may.amazingmusic.utils.isFalse
 import com.may.amazingmusic.utils.isTrue
+import com.may.amazingmusic.utils.noneCacheGlideOptions
 import com.may.amazingmusic.utils.orZero
 import com.may.amazingmusic.utils.player.PlayerListener
 import com.may.amazingmusic.utils.player.PlayerManager
@@ -101,7 +101,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             if (isPlaying && showToast) {
                 ToastyUtils.success("正在播放 - $title")
                 Glide.with(this@MainActivity).load(PlayerManager.player?.mediaMetadata?.artworkData)
-                    .apply(globalGlideOptions(50)).into(binding.displayPlayerIv)
+                    .apply(noneCacheGlideOptions(50)).into(binding.displayPlayerIv)
                 showToast = false
             }
             binding.playIv.setImageResource(
@@ -232,7 +232,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         binding.playIv.setImageResource(if (PlayerManager.player?.isPlaying.isTrue()) R.drawable.icon_pause else R.drawable.icon_play)
         Glide.with(this@MainActivity).load(PlayerManager.player?.mediaMetadata?.artworkData)
-            .apply(globalGlideOptions(50)).into(binding.displayPlayerIv)
+            .apply(noneCacheGlideOptions(50)).into(binding.displayPlayerIv)
         PlayerManager.playerListeners.add(playerListener)
 
         val params = binding.songListPic.layoutParams
@@ -479,39 +479,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
     }
 
-    private suspend fun playThisSong(song: Song) {
-        Log.e(TAG, "playThisSong: song=${song.title}")
-
-        PlayerManager.player?.let { player ->
-            if (player.isPlaying) {
-                player.stop()
-//                PlayerManager.playlist.clear()
-            }
-            song.url?.let {
-                if (PlayerManager.isKuwoSource) {
-                    MediaItem.Builder()
-                        .setUri(it)
-                        .setMediaMetadata(
-                            MediaMetadata.Builder()
-                                .setTitle(song.title).setArtist(song.singer)
-                                .setArtworkData(
-                                    loadImageToByteArray(song.coverUrl),
-                                    MediaMetadata.PICTURE_TYPE_FRONT_COVER
-                                )
-                                .build()
-                        ).build()
-                } else MediaItem.fromUri(it)
-            }?.let {
-                PlayerManager.playlist.add(song)
-                player.addMediaItem(it)
-            }
-//            playlistAdapter?.resetPlaylist(song)
-
-//            player.playWhenReady = true
-            PlayerManager.playSongByPosition(PlayerManager.playlist.size - 1)
-        }
-    }
-
     private suspend fun addSongToPlaylist(
         song: Song,
         playNow: Boolean = false,
@@ -529,7 +496,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             PlayerManager.setPlayerListener()
             PlayerManager.addAnalyticsListenerForTest()
         }
-        Log.e(TAG, "addSongToPlaylist: song=${song.title} player=${PlayerManager.player}")
 
         val intent = Intent(this, PlayService::class.java)
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)

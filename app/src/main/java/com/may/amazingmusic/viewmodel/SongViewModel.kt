@@ -169,14 +169,6 @@ class SongViewModel : ViewModel() {
 
         if (hasAdd.orZero() == 0) {
             PlayerManager.clearPlaylist()
-            if (clickThisKuwoSong == null) addSongToPlay.tryEmit(
-                mapOf(
-                    Pair(
-                        songs[hasAdd],
-                        ADD_LIST_AND_PLAY
-                    )
-                )
-            )
         }
         addSongToPlay.tryEmit(mapOf(Pair(songs[hasAdd], ADD_LIST_LAST)))
     }

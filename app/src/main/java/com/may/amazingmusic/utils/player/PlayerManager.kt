@@ -1,7 +1,6 @@
 package com.may.amazingmusic.utils.player
 
 import android.content.Context
-import android.util.Log
 import androidx.annotation.OptIn
 import androidx.lifecycle.MutableLiveData
 import androidx.media3.common.MediaItem
@@ -22,7 +21,6 @@ import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SHUFFLE
 import com.may.amazingmusic.constant.BaseWorkConst.REPEAT_MODE_SINGLE
 import com.may.amazingmusic.constant.NetWorkConst.FUN_VIDEO_URL
 import com.may.amazingmusic.utils.ToastyUtils
-import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.moreThanOne
 import com.may.amazingmusic.utils.orInvalid
 import com.may.amazingmusic.utils.orZero
@@ -115,7 +113,6 @@ object PlayerManager {
 
     fun playSongByPosition(position: Int) {
         val currentIndex = player?.currentMediaItemIndex
-        Log.e(TAG, "playSongByPosition: pos=$position, current=$currentIndex, player=$player")
         if (currentIndex != position) {
             player?.seekTo(position, 0)
         }
@@ -171,11 +168,6 @@ object PlayerManager {
                 repeatModeLiveData.postValue(REPEAT_MODE_SHUFFLE)
             }
         }
-    }
-
-    fun playAsRepeatMode() {
-        if (player?.shuffleModeEnabled.isTrue()) playNextSong()
-        else player?.play()
     }
 
     fun removeMediaItem(position: Int) {
