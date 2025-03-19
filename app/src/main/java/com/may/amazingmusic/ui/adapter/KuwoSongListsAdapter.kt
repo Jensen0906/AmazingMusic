@@ -50,6 +50,11 @@ class KuwoSongListsAdapter(
         if (holder is SongListViewHolder) {
             if (songLists.isEmpty() || position >= songLists.size) return
 
+            val newWidth = (appContext.resources.displayMetrics.widthPixels - 60f.spToPx(appContext)) / 3
+            val params = holder.itemSongListsBinding.songListGroup.layoutParams
+            params.width = newWidth.toInt()
+            holder.itemSongListsBinding.songListGroup.layoutParams = params
+
             val songList = songLists[position]
 
             holder.itemSongListsBinding.songList = songList

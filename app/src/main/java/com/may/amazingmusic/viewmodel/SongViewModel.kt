@@ -1,6 +1,5 @@
 package com.may.amazingmusic.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -63,7 +62,8 @@ class SongViewModel : ViewModel() {
             val uid = DataStoreManager.userIDFlow.first().orZero()
             if (uid > 0) {
                 val requestBody =
-                    Gson().toJson(User().apply { this.uid = uid }).toRequestBody(CONTENT_TYPE.toMediaTypeOrNull())
+                    Gson().toJson(User().apply { this.uid = uid })
+                        .toRequestBody(CONTENT_TYPE.toMediaTypeOrNull())
                 repository.getFavoriteSongs(favoriteSongs, requestBody)
             } else {
                 favoriteSongs.postValue(emptyList())
@@ -74,11 +74,15 @@ class SongViewModel : ViewModel() {
 
     val addSongToPlay = MutableSharedFlow<Map<Song, Int>>(
         replay = 0,
-        extraBufferCapacity = Int.MAX_VALUE,
+        extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
+
     fun addSongToPlaylist(song: Song, playNow: Boolean = false) {
-        val position = PlayerManager.playlist.indexOfFirst { it.sid == song.sid }
+        if (song.sid <= 0) return
+        val position = PlayerManager.playlist.indexOfFirst {
+            it.sid == song.sid
+        }
         if (playNow) {
             if (position < 0) addSongToPlay.tryEmit(mapOf(Pair(song, ADD_LIST_AND_PLAY)))
             else addSongToPlay.tryEmit(mapOf(Pair(song, position)))
@@ -89,12 +93,10 @@ class SongViewModel : ViewModel() {
 
     fun operateFavorite(song: Song, position: Int) {
         viewModelScope.launch {
-            val uid = DataStoreManager.userIDFlow.first()
-            if (uid == null) {
-                return@launch
-            }
+            val uid = DataStoreManager.userIDFlow.first() ?: return@launch
             val requestBody =
-                Gson().toJson(Favorite(uid, song.sid)).toRequestBody(CONTENT_TYPE.toMediaTypeOrNull())
+                Gson().toJson(Favorite(uid, song.sid))
+                    .toRequestBody(CONTENT_TYPE.toMediaTypeOrNull())
             val ops = repository.operateFavorite(requestBody)
             if (ops) {
                 song.isFavorite = !song.isFavorite
@@ -142,19 +144,41 @@ class SongViewModel : ViewModel() {
     }
 
 
+    var hasAdd = -2
     val songInList = mutableListOf<Song>()
-    fun addAllSongsToPlaylist(playSongList: Boolean = false, kuwoSong: KuwoSong? = null) {
-        val songs = if (playSongList) songInList else favoriteSongs.value
+    var clickThisKuwoSong: KuwoSong? = null
+    var allHasAdded = MutableLiveData(false)
+    fun addAllSongsToPlaylist() {
+        if (hasAdd < 0) {
+            hasAdd = -2
+            return
+        }
+
+        val songs = if (clickThisKuwoSong == null) favoriteSongs.value else songInList
+        PlayerManager.player?.stop()
+
         if (songs.isNullOrEmpty()) {
             ToastyUtils.error(appContext.getString(R.string.no_favorite_song))
             return
         }
-        PlayerManager.clearPlaylist()
-        songs.forEachIndexed { index, song ->
-            Log.i(TAG, "addAllSongsToPlaylist: index=$index, song=${song.title}")
-            if (kuwoSong?.rid != song.sid) addSongToPlay.tryEmit(mapOf(Pair(song, ADD_LIST_LAST)))
+        if (hasAdd >= songs.size) {
+            hasAdd = -2
+            allHasAdded.postValue(true)
+            return
         }
-        PlayerManager.playAsRepeatMode()
+
+        if (hasAdd.orZero() == 0) {
+            PlayerManager.clearPlaylist()
+            if (clickThisKuwoSong == null) addSongToPlay.tryEmit(
+                mapOf(
+                    Pair(
+                        songs[hasAdd],
+                        ADD_LIST_AND_PLAY
+                    )
+                )
+            )
+        }
+        addSongToPlay.tryEmit(mapOf(Pair(songs[hasAdd], ADD_LIST_LAST)))
     }
 
     val songsChanged = MutableSharedFlow<List<Long>>(

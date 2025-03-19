@@ -3,6 +3,7 @@ package com.may.amazingmusic.ui.fragment
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.OptIn
+import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
@@ -50,10 +51,6 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
     }
 
     private val playerListener = object : PlayerListener {
-        override fun onIsPlayingChanged(isPlaying: Boolean, title: String?) {
-            super.onIsPlayingChanged(isPlaying, title)
-            binding.loadingBar.visibility = View.GONE
-        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -72,9 +69,16 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
         PlayerManager.playerListeners.add(playerListener)
         kuwoSongAdapter = KuwoSongAdapter(kuwoSongs, object : KuwoSongClickListener {
             override fun itemClickListener(song: KuwoSong) {
+                if (binding.loadingBar.isVisible) return
                 binding.loadingBar.visibility = View.VISIBLE
-                songViewModel.addSongToPlaylist(song.convertToSong(), true)
-                songViewModel.addAllSongsToPlaylist(true, song)
+                songViewModel.clickThisKuwoSong = song
+                songViewModel.hasAdd = 0
+                songViewModel.addAllSongsToPlaylist()
+
+//                viewLifecycleOwner.lifecycleScope.launch {
+//                    delay(5000)
+//                    if (binding.loadingBar.isVisible) binding.loadingBar.visibility = View.GONE
+//                }
             }
 
             override fun addSongToList(song: KuwoSong) {
@@ -145,6 +149,13 @@ class SongListFragment : BaseFragment<FragmentSongListBinding>() {
                     position = it.second,
                     isFavorite = it.third
                 )
+            }
+        }
+        songViewModel.allHasAdded.observe(viewLifecycleOwner) {
+            if (it) {
+                binding.loadingBar.visibility = View.GONE
+                PlayerManager.playSongBySongId(songViewModel.clickThisKuwoSong?.rid)
+                songViewModel.clickThisKuwoSong = null
             }
         }
     }

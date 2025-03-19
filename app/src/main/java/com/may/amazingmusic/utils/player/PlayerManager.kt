@@ -1,6 +1,7 @@
 package com.may.amazingmusic.utils.player
 
 import android.content.Context
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.lifecycle.MutableLiveData
 import androidx.media3.common.MediaItem
@@ -114,10 +115,19 @@ object PlayerManager {
 
     fun playSongByPosition(position: Int) {
         val currentIndex = player?.currentMediaItemIndex
+        Log.e(TAG, "playSongByPosition: pos=$position, current=$currentIndex, player=$player")
         if (currentIndex != position) {
             player?.seekTo(position, 0)
         }
+        player?.prepare()
         player?.play()
+    }
+
+    fun playSongBySongId(sid: Long?) {
+        val position = playlist.indexOfFirst { it.sid == sid }
+        if (position >= 0) {
+            playSongByPosition(position)
+        }
     }
 
     fun buildCacheDataSourceFactory(context: Context): DataSource.Factory {

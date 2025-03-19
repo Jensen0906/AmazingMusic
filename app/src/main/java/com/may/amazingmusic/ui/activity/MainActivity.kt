@@ -210,7 +210,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         playlistAdapter = PlaylistAdapter(
             PlayerManager.playlist, object : PlaylistItemClickListener {
                 override fun itemClickListener(position: Int) {
-                    PlayerManager.playSongByPosition(position)
+                    if (binding.playAllBtn.isEnabled) PlayerManager.playSongByPosition(position)
                 }
 
                 override fun itemRemoveListener(position: Int) {
@@ -246,7 +246,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         lifecycleScope.launch {
             songViewModel.addSongToPlay.collect {
                 it.firstNotNullOf { entry ->
-                    Log.d(TAG, "addSongToPlay: song=${entry.key}, position=${entry.value}")
                     when (entry.value) {
                         ADD_LIST_AND_PLAY -> addSongToPlaylist(entry.key, playNow = true)
                         ADD_LIST_NEXT -> addSongToPlaylist(entry.key)
@@ -254,6 +253,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                         else -> PlayerManager.playSongByPosition(entry.value)
                     }
                 }
+                songViewModel.hasAdd++
+                songViewModel.addAllSongsToPlaylist()
             }
         }
 
@@ -261,6 +262,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             PlayerManager.repeatModeLiveData.postValue(
                 DataStoreManager.repeatModeFlow.first().orZero()
             )
+        }
+
+        songViewModel.allHasAdded.observe(this) {
+            if (it) {
+                binding.playAllBtn.isEnabled = true
+                PlayerManager.playSongByPosition(0)
+            }
         }
 
         PlayerManager.repeatModeLiveData.observe(this) {
@@ -339,6 +347,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             switchFragment(searchFragment)
         }
         binding.playAllBtn.setOnClickListener {
+            binding.playAllBtn.isEnabled = false
+            songViewModel.clickThisKuwoSong = null
+            songViewModel.hasAdd = 0
             songViewModel.addAllSongsToPlaylist()
         }
         binding.displayPlayerIv.setOnClickListener {
@@ -468,30 +479,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
     }
 
-    private suspend fun justPlayFirstSong(song: Song) {
-        Log.d(TAG, "justPlayFirstSong: song=${song.title}")
-        val intent = Intent(this, PlayService::class.java)
-
-        if (isPlayServiceBinding.isTrue() && PlayerManager.player == null) unbindService(
-            serviceConnection
-        )
-
-        if (PlayerManager.player == null) {
-            val dataSourceFactory = PlayerManager.buildCacheDataSourceFactory(this)
-            PlayerManager.player = ExoPlayer.Builder(this)
-                .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
-                .build()
-
-            PlayerManager.setPlayerListener()
-            PlayerManager.addAnalyticsListenerForTest()
-        }
-
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+    private suspend fun playThisSong(song: Song) {
+        Log.e(TAG, "playThisSong: song=${song.title}")
 
         PlayerManager.player?.let { player ->
             if (player.isPlaying) {
-                player.clearMediaItems()
-                PlayerManager.playlist.clear()
+                player.stop()
+//                PlayerManager.playlist.clear()
             }
             song.url?.let {
                 if (PlayerManager.isKuwoSource) {
@@ -509,16 +503,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 } else MediaItem.fromUri(it)
             }?.let {
                 PlayerManager.playlist.add(song)
-                player.setMediaItem(it)
+                player.addMediaItem(it)
             }
-            playlistAdapter?.resetPlaylist(song)
-            player.prepare()
-            player.repeatMode =
-                if (PlayerManager.repeatModeLiveData.value == REPEAT_MODE_SINGLE) ExoPlayer.REPEAT_MODE_ONE
-                else ExoPlayer.REPEAT_MODE_ALL
-            player.shuffleModeEnabled =
-                PlayerManager.repeatModeLiveData.value == REPEAT_MODE_SHUFFLE
-            player.playWhenReady = true
+//            playlistAdapter?.resetPlaylist(song)
+
+//            player.playWhenReady = true
+            PlayerManager.playSongByPosition(PlayerManager.playlist.size - 1)
         }
     }
 
@@ -527,44 +517,63 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         playNow: Boolean = false,
         addToLast: Boolean = false
     ) {
-        Log.d(
-            TAG,
-            "addSongToPlaylist: song=${song.title}, is first?=${PlayerManager.playlist.isEmpty()}"
-        )
-        if (PlayerManager.playlist.isEmpty()) {
-            justPlayFirstSong(song)
-        } else {
-            PlayerManager.player?.let { player ->
-                val positionAdded = if (addToLast) {
-                    player.mediaItemCount
-                } else player.currentMediaItemIndex + 1
-                song.url?.let {
-                    if (PlayerManager.isKuwoSource) {
-                        MediaItem.Builder()
-                            .setUri(it)
-                            .setMediaMetadata(
-                                MediaMetadata.Builder()
-                                    .setTitle(song.title).setArtist(song.singer)
-                                    .setArtworkData(
-                                        loadImageToByteArray(song.coverUrl),
-                                        MediaMetadata.PICTURE_TYPE_FRONT_COVER
-                                    )
-                                    .build()
-                            )
-                            .build()
-                    } else MediaItem.fromUri(it)
-                }?.let {
+        if (isPlayServiceBinding.isTrue() && PlayerManager.player == null)
+            unbindService(serviceConnection)
+
+        if (PlayerManager.player == null) {
+            val dataSourceFactory = PlayerManager.buildCacheDataSourceFactory(this)
+            PlayerManager.player = ExoPlayer.Builder(this)
+                .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+                .build()
+
+            PlayerManager.setPlayerListener()
+            PlayerManager.addAnalyticsListenerForTest()
+        }
+        Log.e(TAG, "addSongToPlaylist: song=${song.title} player=${PlayerManager.player}")
+
+        val intent = Intent(this, PlayService::class.java)
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+
+        PlayerManager.player?.let { player ->
+            val positionAdded = if (addToLast) {
+                player.mediaItemCount
+            } else player.currentMediaItemIndex + 1
+            song.url?.let {
+                if (PlayerManager.isKuwoSource) {
+                    MediaItem.Builder()
+                        .setUri(it)
+                        .setMediaMetadata(
+                            MediaMetadata.Builder()
+                                .setTitle(song.title).setArtist(song.singer)
+                                .setArtworkData(
+                                    loadImageToByteArray(song.coverUrl),
+                                    MediaMetadata.PICTURE_TYPE_FRONT_COVER
+                                )
+                                .build()
+                        )
+                        .build()
+                } else MediaItem.fromUri(it)
+            }?.let {
+                if (playNow) {
+                    PlayerManager.playlist.add(song)
+                    player.addMediaItem(it)
+                } else {
                     PlayerManager.playlist.add(positionAdded, song)
                     player.addMediaItem(positionAdded, it)
-                    playlistAdapter?.setSongToPlaylist()
                 }
-                if (playNow) {
-                    PlayerManager.playSongByPosition(positionAdded)
-                } else if (!addToLast) {
-                    ToastyUtils.success("下一首播放 - ${song.title}")
-                }
+                playlistAdapter?.setSongToPlaylist()
             }
 
+            if (playNow) {
+                player.repeatMode =
+                    if (PlayerManager.repeatModeLiveData.value == REPEAT_MODE_SINGLE) ExoPlayer.REPEAT_MODE_ONE
+                    else ExoPlayer.REPEAT_MODE_ALL
+                player.shuffleModeEnabled =
+                    PlayerManager.repeatModeLiveData.value == REPEAT_MODE_SHUFFLE
+                PlayerManager.playSongByPosition(PlayerManager.playlist.size - 1)
+            } else if (!addToLast) {
+                ToastyUtils.success("下一首播放 - ${song.title}")
+            }
         }
     }
 
@@ -639,7 +648,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             if (currentFragment is MineFragment) View.VISIBLE else View.GONE
         binding.playAllBtn.visibility =
             if (currentFragment is FavoriteFragment) View.VISIBLE else View.GONE
-        binding.songListGroup.visibility = if (currentFragment is SongListFragment) View.VISIBLE else View.GONE
+        binding.songListGroup.visibility =
+            if (currentFragment is SongListFragment) View.VISIBLE else View.GONE
     }
 
     private suspend fun loadImageToByteArray(coverUrl: String?): ByteArray? {

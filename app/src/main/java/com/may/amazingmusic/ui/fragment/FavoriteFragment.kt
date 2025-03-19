@@ -1,9 +1,7 @@
 package com.may.amazingmusic.ui.fragment
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -19,6 +17,7 @@ import com.may.amazingmusic.ui.adapter.SongsAdapter
 import com.may.amazingmusic.ui.adapter.SongsItemClickListener
 import com.may.amazingmusic.utils.base.BaseFragment
 import com.may.amazingmusic.utils.convertToSong
+import com.may.amazingmusic.utils.isTrue
 import com.may.amazingmusic.utils.player.PlayerManager
 import com.may.amazingmusic.viewmodel.KuwoViewModel
 import com.may.amazingmusic.viewmodel.SongViewModel
@@ -48,20 +47,18 @@ class FavoriteFragment : BaseFragment<FragmentFavoriteBinding>() {
         super.onCreate(savedInstanceState)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        initAdapter()
-        return binding.root
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        initAdapter()
         initCollectAndObserve()
     }
 
     private fun initAdapter() {
         adapter = SongsAdapter(songs, object : SongsItemClickListener {
             override fun itemClickListener(song: Song) {
-                songViewModel.addSongToPlaylist(song, true)
+                if (songViewModel.allHasAdded.value.isTrue()) {
+                    songViewModel.addSongToPlaylist(song, true)
+                }
             }
 
             override fun addSongToList(song: Song) {

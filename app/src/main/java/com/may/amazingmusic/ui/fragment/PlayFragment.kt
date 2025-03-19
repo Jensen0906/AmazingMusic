@@ -59,7 +59,6 @@ class PlayFragment : BaseFragment<FragmentPlayBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         initViews()
         observe()
-
         PlayerManager.playerListeners.add(playerListener)
         handler.post(updateRunnable)
         super.onViewCreated(view, savedInstanceState)
